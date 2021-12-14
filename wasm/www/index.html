@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Water Levels</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+      * {
+        font-family: Roboto,sans-serif;
+      }
+      body {
+        background-color: #494f5c;
+        color: #e8eef2;
+      }
+      li {
+        padding: .3em;
+      }
+      input[type=range] {
+        width: 100%;
+        max-width: 60em;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <script src="./bootstrap.js"></script>
+    <h1>Water Levels</h1>
+    <p>Built from commit <span id="commit"></span></p>
+    <div>Hours: <input type="number" id="hours"></div>
+    <input type="range" min="0" max="100" step="any" id="level">
+    <ul>
+      <li><button class="add">Add</button></li>
+    </ul>
+    <p id="graph"></p>
+  </body>
+</html>

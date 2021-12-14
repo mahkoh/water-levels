@@ -1,0 +1,979 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fullpage}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{xltxtra}
+\usepackage{parskip}
+\usepackage{enumitem}
+\usepackage{svg}
+\usepackage{esint}
+\usepackage[]{algpseudocode}
+
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}{Lemma}
+\newtheorem{rem}{Remark}
+\newtheorem{defi}{Definition}
+\newtheorem{ex}{Example}
+\newtheorem{nota}{Notation}
+\newtheorem{cor}{Corollary}
+
+\newcommand{\inv}[1]{\frac{1}{#1}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Np}{\mathbb{N}_+}
+\newcommand{\bO}{\mathcal{O}}
+\newcommand{\Rp}{\mathbb{R}_+}
+\newcommand{\Rnn}{\mathbb{R}_{\ge0}}
+\newcommand{\Br}{\mathcal{B}_r}
+\newcommand{\Bl}{\mathcal{B}_l}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\Wc}{\mathcal{W}_c}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\E}{\mathcal{E}}
+
+\DeclareMathOperator{\capp}{cap}
+\DeclareMathOperator{\ot}{ot}
+\DeclareMathOperator{\Fill}{fill}
+\DeclareMathOperator{\filltime}{filltime}
+
+\makeatletter
+\def\thm@space@setup{\thm@preskip=\parskip \thm@postskip=0pt}
+\makeatother
+
+\begin{document}
+
+\begin{nota}
+  We write
+  \begin{itemize}
+    \item $\Rp = (0, \infty)$ for the set of positive real numbers,
+    \item $\Rnn = [0, \infty)$ for the set of non-negative real numbers, and
+    \item $\Np = \{ 1, 2, \ldots \}$ for the set of positive natural numbers.
+  \end{itemize}
+\end{nota}
+
+Let $n\in\Np$ and let  $(e_1, \ldots, e_n) \in \Rnn^n$ be a finite sequence describing the elevation levels of a terrain.
+Assume that each $e_i$ describes a segment with a width of $1$ unit.
+
+Assume that it is raining and that each segment receives $1$ square unit of water per hour.
+The task is to find an algorithm that outputs the elevation of each segment after $T\in\Rp$ hours while taking into account the effects of gravity.
+
+\begin{ex}
+  The following terrain could be described by the sequence $10, 30, 50, 70, 90, 0, 70, 50$.
+  \begin{center}
+    \includegraphics{im1.pdf}
+  \end{center}
+  After $16$ hours it would then look as follows with the elevations being $54, 54, 54, 70, 90, 36, 70, 70$.
+  \begin{center}
+    \includegraphics{im2.pdf}
+  \end{center}
+\end{ex}
+
+Our main result is
+\begin{cor}
+\label{mainresult}
+There is an algorithm that computes the elevation levels in $\bO(n\log(n))$ time.
+\end{cor}
+We will prove this at the very end of this paper.
+
+In the following, we will no longer assume that each $e_i$ describes a segment with a width of $1$ unit.
+Instead, let $(w_1,\ldots,w_n) \in \Rp^n$ be a sequence describing the width of the segments.
+The original problem can then be solved by setting $w_i = 1$.
+
+\begin{defi}
+  Let $n\in\Np$.
+  We say that $(e_1,\ldots,e_n)$ is an elevation sequence with widths $(w_1,\ldots,w_n)$ if
+  $(e_1,\ldots,e_n) \in \Rnn^n$ and $(w_1,\ldots,w_n) \in \Rp^n$.
+\end{defi}
+
+In our generalized setting, each segment $i$ receives $w_i$ square units of water per hour.
+
+Note that the problem is invariant under splitting of segments and merging of adjacent segments with identical elevation.
+
+By splitting we mean replacing $e_i$ in place by $e_{i,1} = e_{i,2} = e_i$ and $w_i$ by $w_{i,1}, w_{i,2}$ with $w_{i,1} + w_{i,2} = w_i$.
+
+By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\hat{e}_i = e_i$ and $w_i, w_{i+1}$ by $\hat{w}_i = w_i + w_{i+1}$.
+
+\begin{defi}
+    Let $n\in\Np$ and let $(e_1,\ldots,e_n)$ be an elevation sequence.
+    \begin{enumerate}
+    \item We say that $(e_1,\ldots,e_n)$ is fully merged if $e_i \ne e_{i+1}$ for all $i\in\{1,\ldots,n - 1\}$.
+    \item Let $m\in\Np$ and let $(\tilde{e}_1,\ldots,\tilde{e}_m)$ be an elevation sequence.
+        We say that $(e_1,\ldots,e_n)$ and $(\tilde{e}_1,\ldots,\tilde{e}_m)$ are equivalent if the fully merged versions of both sequences are identical.
+    \item We say that $(e_1,\ldots,e_n)$ has a single local minimum if there is an
+    $i\in\{1,\ldots,n\}$ such that $e_1,\ldots,e_i$ is monotonically decreasing and $e_i,\ldots,e_n$ is monotonically increasing.
+    \item Assume that $(e_1,\ldots,e_n)$ is fully merged.
+        Let $i\in\{2,\ldots,n-1\}$.
+        We say that $e_i$ is a local maximum if $e_{i-1}<e_i$ and $e_i>e_{i+1}$.
+    \end{enumerate}
+\end{defi}
+
+\begin{ex}
+  The following terrain has a single local minimum:
+  \begin{center}
+    \includegraphics{im3.pdf}
+  \end{center}
+  But this one has multiple local minima:
+  \begin{center}
+    \includegraphics{im4.pdf}
+  \end{center}
+\end{ex}
+
+\begin{lem}
+    Let $n\in\Np$ and let $(e_1,\ldots,e_n)$ be an elevation sequence.
+    The fully merged version of $(e_1,\ldots,e_n)$ can be computed in $\bO(n)$ time.
+\end{lem}
+
+\begin{proof}
+    Iterate over the $e_i$ in ascending order.
+    If $e_{i+1} = e_i$, merge the two elements.
+    Otherwise move to the next element.
+\end{proof}
+
+\begin{lem}
+\label{retrieval}
+  Let $n,m\in\Np$, $m < n$, and let $(e_1,\ldots,e_n), (\hat{e}_1,\ldots,\hat{e}_m)$ be equivalent elevation sequences. Let
+  \begin{align*}
+      x \in \left[0, \sum_{i=1}^n w_i\right)
+  \end{align*}
+  be a point in the terrain.
+  The elevation level at $x$ can be determined from $(e_1,\ldots,e_n)$, $(\hat{e}_1,\ldots,\hat{e}_m)$ in $\bO(n)$ time and this process yields the same value for both sequences.
+
+  For $l\in\Np$ and $x_1,\ldots,x_l$ as above, the elevation levels at these points can be determined
+  in $\bO(\max(l\log(l), n))$ time.
+\end{lem}
+
+\begin{proof}
+    It is sufficient to assume that $(\hat{e}_1,\ldots,\hat{e}_m)$ is the fully merged version of $(e_1,\ldots,e_n)$.
+
+    We can determine in $\bO(n)$ time the smallest $j$ such that $\sum_{i=1}^j w_i > x$.
+    Then the elevation level is $e_j$.
+
+    We can transform $(\hat{e}_1,\ldots,\hat{e}_m)$ into $(e_1,\ldots,e_n)$ by performing a finite number of splitting steps.
+    Assume that it takes a single step such that $(e_1,\ldots,e_k,e_{k+1},\ldots,e_n) = (\hat{e}_1,\ldots,\hat{e}_k,\hat{e}_k,\ldots,\hat{e}_m)$ for some $k\in{1,\ldots,m}$.
+
+    If $r<k$ then $\sum_{i=1}^r \hat{w}_i = \sum_{i=1}^r w_i$.
+    If $r\ge k$ then $\sum_{i=1}^r \hat{w}_i = \sum_{i=1}^{r+1} w_i$.
+
+    Let $\hat{j}$ be the smallest integer such that $\sum_{i=1}^{\hat{j}} \hat{w}_i > x$.
+
+    If $\hat{j}<k$ then $\sum_{i=1}^{\hat{j}} w_i = \sum_{i=1}^{\hat{j}} \hat{w}_i > x$, hence $k > \hat{j} \ge j$ by the definition of $j$.
+    Furthermore $\sum_{i=1}^j \hat{w}_i = \sum_{i=1}^j w_i > x$, hence $j \ge \hat{j}$ by the definition of $\hat{j}$. 
+    Therefore $j = \hat{j} < k$ and $e_j = e_{\hat{j}} = \hat{e}_{\hat{j}}$.
+
+    If $\hat{j}=k$ then $\sum_{i=1}^{k-1} w_i = \sum_{i=1}^{k-1} \hat{w}_i \le x$.
+    Hence $j\ge k$ by the definition of $j$.
+    Furthermore: $\sum_{i=1}^{k+1} w_i = \sum_{i=1}^k \hat{w}_i > x$.
+    Hence $j\le k+1$ by the definition of $j$.
+    However, by our assumption $e_k = e_{k+1} = \hat{e}_k$.
+    Therefore $e_j = \hat{e}_{\hat{j}}$.
+
+    If $\hat{j}>k$ then $\sum_{i=1}^{\hat{j}+1} w_i = \sum_{i=1}^{\hat{j}} \hat{w}_i > x$.
+    Hence $j\le \hat{j}+1$ by the definition of $j$.
+    Furthermore $\sum_{i=1}^{\hat{j}} w_i = \sum_{i=1}^{\hat{j}-1} \hat{w}_i \le x$ by the definition of $\hat{j}$.
+    Hence $j > \hat{j}$ by the definition of $j$.
+    Therefore $j = \hat{j}+1$ and $e_j = e_{\hat{j}+1} = \hat{e}_{\hat{j}}$.
+
+    The case where there is more than one splitting step now follows immediately by induction.
+
+    For the $x_1,\ldots,x_l$, we can first assume that they are sorted in ascending order by applying a sorting algorithm in $\bO(l\log(l))$ time.
+    Then we iterate over the $x_i$ and apply the algorithm above except that, since the $x_i$ are sorted, we do not have to restart the summation for each $x_i$.
+    Hence, this iteration completes in $\bO(\max(l, n))$ time.
+\end{proof}
+
+\begin{lem}
+  \label{localmin}
+  Let $n\in\Np$ and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence.
+  The following statements are equivalent:
+  \begin{enumerate}
+    \item $(e_1,\ldots,e_n)$ has a single local minimum.
+    \item $(e_1,\ldots,e_n)$ has no local maxima.
+  \end{enumerate}
+\end{lem}
+
+\begin{proof}
+  $\Rightarrow$: Assume that $(e_1,\ldots,e_n)$ has a single local minimum $e_i$.
+  For $i \le j < k$, $e_j \le e_k$, therefore $e_j$ is not a local maximum.
+  For $k < j \le i$, $e_k \ge e_j$, therefore $e_j$ is not a local maximum.
+
+  $\Leftarrow$: Assume that $(e_1,\ldots,e_n)$ has no local maxima.
+  Let $i$ be such that $e_i = \min(e_1,\ldots,e_n)$.
+  We show by induction over $j \in \{i,\ldots,n-1\}$ that $e_j < e_{j+1}$.
+  For $j = i$ it follows by the definition of $i$ and the fact that the sequence is fully merged.
+  Assume that the statement holds for $j-1$, that is, $e_{j-1} < e_j$.
+  If $e_j > e_{j+1}$, then $e_j$ would be a local maximum.
+  Since this is not possible, $e_j < e_{j+1}$.
+  By an identical induction, we see that $e_{j-1} > e_j$ for $j \in \{2,\ldots,i\}$.
+\end{proof}
+
+Next we will describe an algorithm that solves the problem for a terrain with a single local minimum.
+We will call this algorithm the \textit{SLM algorithm}.
+
+\begin{lem}[SLM Algorithm]
+    Let $n\in\Np$, $V\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence with a single local minimum.
+    The following algorithm calculates the elevation levels after pouring $V$ square units of water into the terrain.
+    The algorithm runs in $\bO(n)$ time.
+\end{lem}
+
+\vspace{1em}
+
+\begin{algorithmic}[1]
+    \State Let $i$ be such that $e_i$ is the local minimum of the sequence\; \label{a1:minimum}
+    \State For all $j$, $e_j^0 := e_j$ and $w_j^0 := w_j$
+    \State $i^0 := i$
+    \State $n^0 := n$
+    \State $K := 0$
+    \While{true} \label{a1:while}
+        \State $l := \infty$
+        \If{$i^K > 1$}
+            \State $l := e_{i^K-1}^K$
+        \EndIf
+        \State $r := \infty$
+        \If{$i^K < n^K$}
+            \State $r := e_{i^K+1}^K$
+        \EndIf
+        \State $m := \min(l, r)$
+        \State $u := (m-e_{i^K}^K)w_{i^K}$
+        \If{$V < u$} \label{a1:vleu}
+            \State $e_{i^K}^K := e_{i^K}^K + \frac{V}{w_{i^K}}$ \label{a1:vplus}
+            \State break \label{a1:break}
+        \EndIf
+        \State $e_{i^K}^K := m$ \label{a1:newe}
+        \If{$l = r$} \label{a1:leqr}
+            \State $n^{K+1} := n^K - 2$ \label{a1:min2}
+        \Else
+            \State $n^{K+1} := n^K - 1$ \label{a1:min1}
+        \EndIf
+        \State Merge $e_{i^K}^K$ with the surrounding segments if possible \label{a1:merge}
+        \State Call the resulting sequences $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $w_1^{K+1},\ldots,w_{n^{K+1}}^{K+1}$
+        \If{$l \le r$} \label{a1:ller}
+            \State $i^{K+1} := i^K - 1$ \label{a1:imin1}
+        \Else
+            \State $i^{K+1} := i^K$ \label{a1:imin0}
+        \EndIf
+        \State $K := K + 1$
+        \State $V := V - u$
+    \EndWhile
+    \State The $e_1^K,\ldots,e_{n^K}^K$ are the elevation levels
+\end{algorithmic}
+
+\begin{proof}
+The proof consists of 4 parts. In part 1 we show that the algorithm is well-formed.
+In part 2 we show that it can be expressed recursively.
+In part 3 we show that it computes the elevation levels.
+In part 4 we show that it runs in $\bO(n)$ time.
+
+\textbf{Part 1}: By induction over $K$ we show that $i^K \le n^K$ and that $n^{K+1}$ is in fact the length of the sequence after the merge step in line \ref{a1:merge}.
+Note that we only show it for those finitely many $K$ that appear in the algorithm.
+
+For $K=0$ it is clear.
+Assume that the condition holds for $K = \tilde{K}$ and that we have started the loop with $K$ set to this value.
+If $V < u$ holds in line \ref{a1:vleu}, then the loop ends and it is nothing to show.
+Otherwise assume that $V \ge u$.
+
+If $l = r$ in line \ref{a1:leqr}, then $(l - e_{i^K}^K)w_{i^K} = (\min(l,r) - e_{i^K}^K)w_{i^K} = (m - e_{i^K}^K)w_{i^K} = u \le V < \infty$.
+Therefore, since $w_{i^K} > 0$, $l = r < \infty$.
+By the definitions of $l$ and $r$, it follows that $i^K > 1$ and $i^K < n^K$ and therefore
+$e_{i^K-1}^K = l = r = e_{i^K+1}^K$.
+After setting $e_{i^K}^K := m = l = r$ in line \ref{a1:newe}, the merge step in line \ref{a1:merge} merges $e_{i^K - 1}^K, e_{i^K}^K$, and $e_{i^K + 1}^K$.
+Therefore the resulting sequence contains two fewer elements and the assignment $n^{K+1} := n^K - 2$ in line \ref{a1:min2} was correct.
+Furthermore, in line \ref{a1:imin1}, $i^{K+1} := i^K - 1 \le n^K - 1 - 1 = n^{K+1}$.
+
+Otherwise if $l < r$ then $l < \infty$ and $i^K > 1$ and therefore $e_{i^K-1}^K = l$.
+After setting $e_{i^K}^K := m = l$ in line \ref{a1:newe}, the merge step in line \ref{a1:merge} merges $e_{i^K - 1}^K$ and $e_{i^K}^K$.
+Therefore the resulting sequence contains one fewer element and the assignment $n^{K+1} := n^K - 1$ in line \ref{a1:min1} was correct.
+Furthermore, in line \ref{a1:imin1}, $i^{K+1} := i^K - 1 \le n^K - 1 = n^{K+1}$.
+
+Otherwise if $l > r$ then $r < \infty$ and $i^K < n^K$ and therefore $e_{i^K+1}^K = r$.
+After setting $e_{i^K}^K := m = r$ in line \ref{a1:newe}, the merge step in line \ref{a1:merge} merges $e_{i^K}^K$ and $e_{i^K + 1}^K$.
+Therefore the resulting sequence contains one fewer element and the assignment $n^{K+1} := n^K - 1$ in line \ref{a1:min1} was correct.
+Furthermore, in line \ref{a1:imin0}, $i^{K+1} := i^K \le n^K - 1 = n^{K+1}$.
+
+This completes the proof by induction.
+
+\textbf{Part 2}: By induction over $K$, we show that the sequence $e_1^K,\ldots,e_{n^K}^K$ is fully merged and has a single local minimum, and that $e_{i^K}^K$ is the local minimum of the sequence.
+
+For $K=0$ it is clear.
+Assume that the condition holds for $K = \tilde{K}$ and that we have started the loop with $K$ set to this value.
+If $V < u$ holds in line \ref{a1:vleu}, then $e_{i^K}^K := e_{i^K}^K + \frac{V}{w_{i^K}} < e_{i^K}^K + \frac{u}{w_{i^K}} = m = \min(l, r)$.
+Hence, $e_{i^K}^K < \min(l, r)$ and $e_{i^K}^K$ remains the strict minimum of the sequence.
+Otherwise assume that $V \ge u$.
+
+If $l \le r$ in line \ref{a1:ller}, then $e_{i^K}^K := m = l$ in line \ref{a1:newe} and the merge step in line \ref{a1:merge} merges $e_{i^K - 1}^K$ and $e_{i^K}^K$.
+Since we set $i^{K+1} := i^K - 1$ in line \ref{a1:imin1},
+$(e_1^{K+1},\ldots,e_{i^{K+1}}^{K+1}) = (e_1^K,\ldots,e_{i^K - 1}^K)$ is strictly monotonically decreasing by induction.
+If $l < r$, then $(e_{i^{K+1}}^{K+1},\ldots,e_{n^{K+1}}^{K+1}) = (l,r,\ldots,e_{n^K}^K)$ is strictly monotonically increasing.
+Otherwise if $l = r$, then $(e_{i^{K+1}}^{K+1},\ldots,e_{n^{K+1}}^{K+1}) = (r,e_{i^K+2}^K,\ldots,e_{n^K}^K)$ is strictly monotonically increasing.
+(Note that in the case $l = r$ we merge 3 segments.)
+
+If $l > r$ in line \ref{a1:ller}, then $e_{i^K}^K := m = r$ in line \ref{a1:newe} and the merge step in line \ref{a1:merge} merges $e_{i^K}^K$ and $e_{i^K + 1}^K$.
+Since we set $i^{K+1} := i^K$ in line \ref{a1:imin1},
+$(e_1^{K+1},\ldots,e_{i^{K+1}}^{K+1}) = (e_1^K,\ldots,l,r)$ is strictly monotonically decreasing by induction.
+Furthermore $(e_{i^{K+1}}^{K+1},\ldots,e_{n^{K+1}}^{K+1}) = (r,\ldots,e_{n^K}^K)$ is strictly monotonically increasing.
+
+This completes the proof by induction.
+
+Note that the algorithm is tail recursive.
+Therefore we can reformulate it as a recursive function.
+Instead of jumping back to the start of the loop, we can invoke the algorithm again with
+the sequence set to $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $V$ set to $V - u$.
+Recall that we have just proved that this sequence is a valid input for the algorithm and that $e_{i^{K+1}}^{K+1}$ is the minimum that is being computed in line \ref{a1:minimum}.
+
+\textbf{Part 3}: We can now prove by induction over $n$ that the algorithm computes the elevation levels.
+
+Step 1: $n = 1$ or $V < u$ during the first iteration of the loop. Note that $n = 1$ implies $V < \infty = u$.
+
+Since the $e_i$ is the single local minimum of the sequence and since it is a strict minimum, all water will flow to $e_i$ until the negative volume below the adjacent segments is used up.
+The following image shows the negative volume of an example.
+\begin{center}
+  \includegraphics{im6.pdf}
+\end{center}
+Note that $u := (\min(l, r)-e_{i^K}^K)w_i$ is the volume of this space.
+By our assumption, $V < u$, that is, all of the water fits into this space.
+In line \ref{a1:vplus}, the algorithm increases the height of $e_i$ by $V/w_i$ which is in fact the height a volume $V$ would take up in this space of width $w_i$.
+
+Step 2: Assume that the argument holds for all $\tilde{n} < n$.
+For $V < u$ we have already shown the result in step 1.
+Otherwise assume $V \ge u$.
+Let $u$ be as in the first iteration of the loop, $V_1 = u$, and $V_2 = V - V_1 \ge 0$.
+We have shown above that invoking the algorithm with $V$ is the same as running the iteration once and then invoking the algorithm on the resulting sequence with $V = V_2$.
+Note that invoking the algorithm with $V_1$ runs the iteration once and then once more with $V = 0$.
+Since the sequence is fully merged, we know that $u > 0$; therefore we break out of the loop in the second iteration.
+However, the second iteration has no effect on the output of the algorithm.
+Therefore, invoking the algorithm with $V$ is identical to invoking the algorithm once with $V = V_1$ and then with $V = V_2$ on the output of the first invocation.
+During the first iteration of the invocation with $V = V_1$, we have $V = u \ge u$ in line \ref{a1:vleu}.
+Therefore the algorithm outputs a new sequence with length $n^1 < n$.
+
+Note that during the invocation of the algorithm with $V = V_1$ we have $V = u$.
+By an argument identical to that in step 1, this invocation computes the elevation level after pouring $V_1$ square units of water into the terrain.
+By our induction assumption (since $n^1 < n$), invoking the algorithm with $V = V_2$ on the output of the first invocation calculates the elevation levels after pouring $V_2$ square units of water into the terrain, taking into account the changes in elevation caused by the first $V_1$ square units of water.
+
+Since water in the real world also composes, that is, pouring $V$ square units is the same as pouring $V_1$ square units and then $V_2$ square units (ignoring evaporation etc.), this completes the proof by induction.
+
+\textbf{Part 4}: Lastly we show that the algorithm completes in $\bO(n)$ time.
+Computing $i$ in line \ref{a1:minimum} takes $\bO(n)$ time.
+Within the loop, performing the merge only touches the elements to the immediate left and right of the local minimum; therefore, assuming an implementation via linked lists, this operation takes $\bO(1)$ time.
+All other operations within the loop are clearly $\bO(1)$.
+Each iteration of the loop decreases the length of the sequence by at least $1$ and the loop terminates when the length is $1$.
+Therefore the loop iterates at most $n$ times.
+
+This completes the proof.
+\end{proof}
+
+\begin{lem}
+  \label{compose}
+  Applying the algorithm from the previous lemma with $V = V_1 + V_2$ is the same as applying
+  it once with $V = V_1$ and then applying it with $V = V_2$ on the output of the first application.
+\end{lem}
+
+\begin{proof}
+  Since the algorithm computes the effects of a physical process and since this physical process decomposes, the algorithm also decomposes.
+\end{proof}
+
+We can now solve the general problem using the following ansatz.
+
+Let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence.
+\begin{center}
+  \includegraphics{im8.pdf}
+\end{center}
+Note that on each local maximum, half of the water flows to the left and half flows to the right.
+Split each local maximum in half.
+\begin{center}
+  \includegraphics{im9.pdf}
+\end{center}
+We call each of these three components a \textit{sink}.
+Note that each sink has a single local minimum.
+Fill each sink uniformly and independently until any of the sinks overflows onto one of the bounding local maxima.
+\begin{center}
+  \includegraphics{im10.pdf}
+\end{center}
+Fill up the overflowing sink and merge it with the sink on the overflowing side.
+\begin{center}
+  \includegraphics{im12.pdf}
+\end{center}
+Note that the merged sink has a single local minimum.
+Repeat this process until $T$ is reached.
+Note that if only a single sink remains, that sink will never overflow since it has no bounding local maxima.
+
+One special case occurs if the sink overflows on both sides at the same time.
+\begin{center}
+  \includegraphics{im13.pdf}
+\end{center}
+In this case the overflowing sink is filled up, split in half, and divided equally between its neighbors.
+\begin{center}
+  \includegraphics{im14.pdf}
+\end{center}
+
+We will now define the sinks of an elevation sequence and their properties.
+
+Let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence and let $k_1,\ldots,k_m \in \{2,\ldots,n-1\}$ be its local maxima.
+
+If the sequence has no local maxima, then it has a single sink $S_1$ containing all of the segments.
+
+Otherwise, split each $e_{k_i}$ into $e_{k_i,1}$ and $e_{k_i,2}$, each having half of the width of $e_{k_i}$.
+Then $S_1$ consists of $(e_1,\ldots,e_{k_1,1})$.
+For $i\in\{2,\ldots,m\}$, $S_i$ consists of $(e_{k_{i-1},2},\ldots,e_{k_i,1})$.
+$S_{m+1}$ consists of $(e_{k_m,2},\ldots,e_n)$.
+Consequently there are $m+1$ sinks.
+
+For each sink $S$ we define
+\begin{align*}
+    \Bl(S) &=
+        \begin{cases}
+            \textrm{the elevation of the first segment in $S$}, & \textrm{if there is a sink to the left of $S$} \\
+            \infty, & \textrm{otherwise} \\
+        \end{cases} \\
+    \Br(S) &=
+        \begin{cases}
+            \textrm{the elevation of the last segment in $S$}, & \textrm{if there is a sink to the right of $S$} \\
+            \infty, & \textrm{otherwise} \\
+        \end{cases}
+\end{align*}
+The \textit{bounding height} $\B(S)$ of $S$ is defined as $\B(S) = \min(\Bl(S), \Br(S))$.
+
+We write $\E(S)$ for the sequence of segments in $S$.
+For example, $\E(S_i) = (e_{k_{i-1}^2},\ldots,e_{k_i^1})$ for $i\in\{2,\ldots,m\}$.
+We write $\C(S)$ for the subsequence of $\E(S)$ consisting of those $e$ for which $e \le \B(S)$.
+We write $\norm{\E(S)}$ for the number of elements in $\E(S)$ and $\norm{\C(S)}$ for the number of elements in $\C(S)$.
+
+It is clear that, since $\E(S)$ contains no local maximum, $\C(S)$ is a continuous subsequence of $\E(S)$.
+That is, if $e_a$, $e_b$, and $e_c$ are in $\E(S)$ in that order, and $e_a$ and $e_c$ are in $\C(S)$, then $e_b\in\C(S)$.
+Let $e_l$ and $e_r$ be the first and last elements in $\E(S)$.
+By the definition of $\B(S)$, $e_l\le\B(S)$ or $e_r\le\B(S)$.
+Therefore $e_l\in\C(S)$ or $e_r\in\C(S)$.
+
+When discussing the time complexity of our algorithm, we will assume that $\E(S)$ is implemented by storing two pointers.
+The first pointer points to the first element in $\E(S)$ and the second pointer points to the last element of $\E(S)$.
+Similarly for $\C(S)$.
+
+For each segment $e\in\E(S)$, let $\W(e)$ be the corresponding width.
+We define the \textit{capacity} $\capp(S)$ of a sink as follows:
+\begin{align*}
+    \capp(S) = \sum_{e\in\C(S)} \W(e)(\B(S)-e).
+\end{align*}
+Note that $\capp(S)$ is the volume of water $S$ can hold before it overflows.
+
+We define the \textit{width} $\W(S)$ of $S$ by
+\begin{align*}
+    \W(S) = \sum_{e\in\E(S)} \W(e).
+\end{align*}
+We define the \textit{capacity width} $\Wc(S)$ of $S$ by
+\begin{align*}
+    \Wc(S) = \sum_{e\in\C(S)} \W(e).
+\end{align*}
+
+At certain points in the algorithm, we compute for a sink $S$ how much water is currently in the sink.
+At these points we store the time since it has started raining and the computed value.
+We call these values $\filltime(S)$ and $\Fill(S)$ respectively.
+Initially, both values are $0$.
+
+For each sink $S$, we calculate the time (in hours) at which it will overflow, $\ot(S)$, as follows:
+\begin{align*}
+    \ot(S) = \frac{\capp(S) - \Fill(S)}{\W(S)} + \filltime(S).
+\end{align*}
+If a sink has capacity $\capp(S)$, of which $\Fill(S)$ is already used, then the remaining capacity for additional water is $\capp(S) - \Fill(S)$.
+Since the sink receives $\W(S)$ square units of water per hour, this additional capacity is used up after $\frac{\capp(S) - \Fill(S)}{\W(S)}$ hours.
+Since this additional rain occurs after the time $\filltime(S)$, we have to add $\filltime(S)$ to get the absolute time value.
+We will prove this more formally below.
+
+We define a total order on the sinks $S_i$ by the lexicographic order on the tuples $(\ot(S_i), i)$.
+That is, sinks that overflow earlier come first.
+If two sinks overflow at the same time, the sink with the smaller index comes first.
+
+In our algorithm, we will maintain a priority queue containing all sinks.
+Popping an element from this queue always returns the sink that comes first in the order defined above.
+That is, it always returns the sink that overflows next.
+
+Some of the properties above require more than $\bO(1)$ time to be computed.
+In these cases, we will assume that the properties are calculated once and then cached.
+When merging two sinks we will re-calculate the cached values.
+
+In our algorithm, we will maintain doubly-linked lists of elevation segments and sinks.
+Both of these lists contain their elements from left to right in the terrain.
+When we say that we remove one or more elevation segments or sinks, we mean removing them from these linked lists.
+
+\begin{thm}
+    Let $n\in\Np$, $T\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence.
+    The following algorithm calculates the elevation levels at time $T$ in $\bO(n\log(n))$ time.
+\end{thm}
+
+\vspace{1em}
+
+\begin{algorithmic}[1]
+    \State Let $(S_i)_i$ be the sinks of $(e_1,\ldots,e_n)$
+    \State Let $B$ be a priority queue containing the sinks as described above
+    \While{true} \label{a2:while}
+        \State Pop a sink $S$ from $B$  \label{a2:firstline}
+        \If{$\ot(S)\ge T$} \label{a2:otget}
+            \State break
+        \EndIf
+        \If{$\Bl(S) = \Br(S)$} \label{a2:bleqbr}
+            \State Let $S_l$ be the sink to the left of $S$ \label{a2:getsl}
+            \State Let $S_r$ be the sink to the right of $S$ \label{a2:getsr}
+            \State $\Fill(S_l) := \Fill(S_l) + (\ot(S) - \filltime(S_l))\W(S_l)$
+            \State $\Fill(S_r) := \Fill(S_r) + (\ot(S) - \filltime(S_r))\W(S_r)$
+            \State $\filltime(S_l) := \ot(S)$ \label{a2:setflsl}
+            \State $\filltime(S_r) := \ot(S)$
+            \State Let $e_r$ be the rightmost segment in $S_l$ \label{a2:geter}
+            \State Let $e_l$ be the leftmost segment in $S_r$ \label{a2:getel}
+            \State Remove all segments between $e_r$ and $e_l$ \label{a2:remerel}
+            \State $w := \W(e_r) + \W(e_l) +\W(S)$ \label{a2:defw}
+            \State $d_r := w/2 - \W(e_r)$ \label{a2:defdr}
+            \State $d_l := w/2 - \W(e_l)$ \label{a2:defdl}
+            \State $\W(e_r) := \W(e_r) + d_r$ \label{a2:adlener}
+            \State $\W(e_l) := \W(e_l) + d_l$ \label{a2:adlenel}
+            \State $\W(S_l) := \W(S_l) + d_r$ \label{a2:adlenls}
+            \State $\W(S_r) := \W(S_r) + d_l$ \label{a2:adlenrs}
+            \If{$\C(S_l)$ ends in $e_r$}
+              \State $\Wc(S_l) := \Wc(S_l) + d_r$ \label{a2:modwcsl}
+            \EndIf
+            \If{$\C(S_r)$ ends in $e_l$}
+              \State $\Wc(S_r) := \Wc(S_r) + d_l$
+            \EndIf
+            \State Remove $S$. \label{a2:rems}
+            \State Recalculate $\ot(S_l)$ \label{a2:recalotsl}
+            \State Recalculate $\ot(S_r)$ \label{a2:recalotsr}
+        \Else
+            \If{$\Bl(S) < \Br(S)$} \label{a2:bllessbr}
+              \State Let $S_m$ be the sink to the left of $S$ \label{a2:getsm}
+            \Else
+              \State Let $S_m$ be the sink to the right of $S$
+            \EndIf
+            \State $\Fill(S_m) := \Fill(S_m) + (\ot(S) - \filltime(S_m))\W(S_m)$
+            \State $\filltime(S_m) := \ot(S)$ \label{a2:setflsm}
+            \State Remove the elements of $\C(S)$ \label{a2:remcs}
+            \State Extend $\E(S_m)$ to contain $\E(S)$ \label{a2:extend}
+            \State $\W(S_m) := \W(S_m) + \W(S)$ \label{a2:addwsm}
+            \If{$\Bl(S) < \Br(S)$}
+              \State Let $e_r$ be the rightmost segment in $S_m$ \label{a2:geter2}
+              \State $\W(e_r) := \W(e_r) + \Wc(S)$ \label{a2:addwer}
+              \If{$\C(S_m)$ ends in $e_r$}
+                \State $\Wc(S_m) := \Wc(S_m) + \Wc(S)$
+              \EndIf
+              \State $\Br(S_m) := \Br(S)$ \label{a2:bru}
+            \Else
+              \State Let $e_l$ be the leftmost segment in $S_m$
+              \State $\W(e_l) := \W(e_l) + \Wc(S)$
+              \If{$\C(S_m)$ ends in $e_l$}
+                \State $\Wc(S_m) := \Wc(S_m) + \Wc(S)$
+              \EndIf
+              \State $\Bl(S_m) := \Bl(S)$ \label{a2:blu}
+            \EndIf
+            \State $b := \B(S_m)$
+            \State $\B(S_m) := \min(\Bl(S_m), \Br(S_m))$ \label{a2:bu}
+            \State $\capp(S_m) := \capp(S_m) + \Wc(S_m)(\B(S_m) - b)$ \label{a2:inccap}
+            \While{there is a segment to the left of $\C(S_m)$} \label{a2:walkstart}
+              \State Let $e$ be the segment immediately to the left of $\C(S_m)$
+              \If{$e > \B(S_m)$ or $e$ is outside of $\E(S_m)$}
+                  \State break
+              \EndIf
+              \State $\Wc(S_m) := \Wc(S_m) + \W(e)$
+              \State $\capp(S_m) := \capp(S_m) + \W(e)(\B(S_m) - e)$
+              \State Extend $\C(S_m)$ to contain $e$ \label{a2:cext1} \label{a2:dec1}
+            \EndWhile
+            \While{there is a segment to the right of $\C(S_m)$}
+              \State Let $e$ be the segment immediately to the right of $\C(S_m)$
+              \If{$e > \B(S_m)$ or $e$ is outside of $\E(S_m)$}
+                  \State break
+              \EndIf
+              \State $\Wc(S_m) := \Wc(S_m) + \W(e)$
+              \State $\capp(S_m) := \capp(S_m) + \W(e)(\B(S_m) - e)$
+              \State Extend $\C(S_m)$ to contain $e$ \label{a2:cext2} \label{a2:dec2}
+            \EndWhile  \label{a2:walkstop}
+            \State Remove $S$. \label{a2:rems2}
+            \State Recalculate $\ot(S_m)$ \label{a2:recalotsm}
+        \EndIf
+    \EndWhile
+    \For{each sink $S$ in the linked list}
+      \State $\Fill(S) := \Fill(S) + (T - \filltime(S))\W(S)$ \label{a2:lastfill}
+      \State Detach $\E(S)$ from the rest of the linked list
+      \State Apply the SLM algorithm to $\E(S)$ with $V = \Fill(S)$
+      \State Insert the output into the linked list in the place where we just detached $\E(S)$
+    \EndFor
+    \State The linked list of segments are the desired elevation levels.
+\end{algorithmic}
+
+\begin{proof}
+The proof consists of three parts.
+In the first part we will show that the algorithm is well-formed and various useful properties.
+In the second part we will show that the algorithm computes the correct values.
+In the third part we will show that it runs in $\bO(n\log(n))$ time.
+
+\textbf{Part 1}:
+We show by induction that the following properties hold for all sinks $S$ in the linked list of sinks whenever we reach line \ref{a2:firstline}.
+\begin{enumerate}[label=\textbf{\Roman*}]
+\item The definitions of $\Bl(S)$, $\Br(S)$, $\B(S)$, $\C(S)$, $\capp(S)$, $\W(S)$, $\Wc(S)$, and $\ot(S)$ hold.\label{e1}
+\item The $\E(S)$ form a partition of the terrain.\label{e2}
+\item $\filltime(S) \le T$ and $\filltime(S) \le \ot(S_*)$ for all $S_*$ in the linked list.\label{e3}
+\item If two sinks in the linked list are next to each other, then the segments at their common boundary have the same elevation and width.\label{e4} 
+\item If the linked list contains more than one sink, then each sink contains at least two segments.\label{e6}
+\item The $\C(S)$ are non-empty.\label{e7}
+\item $\W(S)$, $\Wc(S)$ are positive and never decrease.\label{e8}
+\item $\W(e)$ is positive for all segments.\label{e9}
+\item $\Bl(S)$ and $\Br(S)$ are positive and never decrease.\label{e10}
+\item $\capp(S)$ is positive and never decreases.\label{e11}
+\item $\E(S)$, when detached from the rest of the linked list of segments, has a single local minimum and is fully merged.\label{e12}
+\item The priority queue $B$ contains exactly the sinks in the linked list of sinks and is not empty.\label{e13}
+\item The sequence of values $\ot(S)$ of the sinks $S$ popped in line \ref{a2:firstline} never decreases.\label{e15}
+\item $\Fill(S) \le \capp(S)$.\label{e16}
+\item $\sum_S\left(\norm{\E(S)} - \norm{\C(S)}\right)$ (where $S$ ranges over all $S$ in the linked list) does not increase during this iteration and decreases by $1$ for each time to algorithm reaches line \ref{a2:dec1} or \ref{a2:dec2}.\label{e17}
+\item Applying the SLM algorithm to $\E(S)$ detached from all other sinks with $V=\Fill(S)$ computes the elevation levels of the sink at time $\filltime(S)$.\label{e18}
+\end{enumerate}
+
+Throughout the proof, we will use the prime symbol $'$ to refer to the values of properties as they were at the start of the iteration before any modifications.
+For example, $\W(S')$.
+
+Note: During the proof we make gratuitous use of the following physical property:
+Due to \ref{e4} and \ref{e12}, water that falls onto a sink always flows towards the sink and never outside the sink.
+
+\textbf{Induction start}: Assume that we have reached line \ref{a2:firstline} for the first time.
+Then none of the $S$ or their properties have been modified after construction.
+Therefore \ref{e1} holds by definition.
+
+Since $\filltime(S) = 0$, $\filltime(S) \le T$.
+Since
+\begin{align*}
+    \ot(S_*) = \frac{\capp(S_*) - \Fill(S_*)}{\W(S_*)} + \filltime(S_*)
+           = \frac{\capp(S_*)}{\W(S_*)}
+           \ge 0 = \filltime(S),
+\end{align*}
+\ref{e3} holds.
+
+\ref{e2} and \ref{e4} hold by the construction of the sinks. 
+\ref{e7} holds because $\C(S)$ contains one of the end-segments of the sink.
+\ref{e9} holds by our definition of elevation sequence.
+
+To show \ref{e6}, note that if there is only 1 sink, there is nothing to do.
+Otherwise each sink is bounded on at least one side by a local maximum of the original elevation sequence.
+Note that two adjacent elevation segments cannot both be local maxima because one has to be higher than the other.
+Therefore, if $e_l$ and $e_r$ are segments next to each other and $e_r$ is a local maximum, then
+the sink to the left of $e_r$ contains $e_l$ and the left half of the split version of $e_r$.
+Therefore \ref{e6} holds.
+
+$\W(S) > 0$ holds because each sink contains at least one segment and because of \ref{e9}.
+$\Wc(S) > 0$ holds because of \ref{e7} and \ref{e9}.
+Therefore \ref{e8} holds.
+
+To show \ref{e10}, note that if $S$ is the leftmost sink, $\Bl(S)$ is $\infty$.
+Otherwise it is the elevation level of the leftmost segment in $S$.
+Since this segment was created by splitting a local maximum of the original elevation segment, and since local maxima are positive by definition, $\Bl(S)$ is positive.
+Similarly for $\Br(S)$.
+Therefore \ref{e10} holds.
+
+To show \ref{e11}, recall that $\capp(S) = \sum_{e\in\C(S)} \W(e)(\B(S)-e)$.
+Since $\C(S)$ is not empty by \ref{e7} and $\W(e) > 0$ by \ref{e9}, we only have
+to show that $\B(S) > e$ for some $e\in\C(S)$.
+If $\B(S)=\infty$, there is nothing to show.
+Otherwise, if $\B(S) = \min(\Bl(S), \Br(S)) = \Bl(S)$, the leftmost segment $e_l$ in $S$ was created by splitting a local maximum of the original elevation sequence.
+$\Bl(S)$ is the elevation of this segment.
+The segment to the right of $e_l$, $e_*$, was not a local maximum of the original sequence and $e_* < e_l = \B(S)$.
+Therefore $e_*$ is part of $\C(S)$.
+Similarly for $\B(S) = \Br(S)$.
+Therefore \ref{e11} holds.
+
+To show \ref{e12}, note that $\E(S)$ does not contain a local maximum by the construction of the sinks.
+By lemma \ref{localmin}, this is equivalent to $\E(S)$ having a single local minimum.
+Since the original sequence was fully merged and since $\E(S)$ contains split segments only at its boundary, $\E(S)$ is fully merged.
+Therefore \ref{e12} holds.
+
+By our construction of $B$ it contains all sinks and by our construction of the sinks, there is at least 1 sink.
+Therefore \ref{e13} holds.
+
+There is nothing to show for \ref{e15} and \ref{e17}.
+
+Since $\Fill(S) = 0 \le \capp(S)$, \ref{e16} holds.
+
+Since $\Fill(S) = \filltime(S) = 0$, \ref{e18} holds.
+
+\textbf{Induction step}: Assume that we have reached line \ref{a2:firstline} and that the properties hold.
+We show that the properties continue to hold at the start of the next iteration.
+Note that, because of $\ref{e13}$, popping a sink from $B$ is a well-defined operation.
+
+If $\ot(S)\ge T$ in line \ref{a2:otget}, then we leave the loop and there is nothing to show.
+Assume $\ot(S) < T$.
+
+\textbf{Case 1}: $\Bl(S) = \Br(S)$ in line \ref{a2:bleqbr}.
+
+Since 
+\begin{align*}
+    \ot(S) &= \frac{\capp(S) - \Fill(S)}{\W(S)} + \filltime(S) \\
+           &= \frac{\sum_{e\in\C(S)} \W(e)(\B(S)-e) - \Fill(S)}{\W(S)} + \filltime(S) \\
+           &< T \\
+           &< \infty,
+\end{align*}
+by \ref{e1}, $\C(S)$ is not empty by \ref{e7}, and $\W(e) > 0$ by \ref{e9},
+we see that $\Bl(S) = \Br(S) = \min(\Bl(S), \Br(S)) = \B(S) < \infty$.
+
+Therefore, by \ref{e1}, $S$ has neighbors to its left and right and the operations in lines \ref{a2:getsl} and \ref{a2:getsr} are well-defined.
+
+Let $e_r$ and $e_l$ be as in lines \ref{a2:geter} and \ref{a2:getel}.
+By \ref{e4} and \ref{e6}, we know that $\W(S) \ge \W(e_l) + \W(e_r)$.
+Therefore $w/2 \ge \W(e_l), \W(e_r)$ holds for $w$ as in line \ref{a2:defw}.
+Therefore $d_r, d_l \ge 0$ in lines \ref{a2:defdr}, \ref{a2:defdl}.
+
+Note that $d_r + d_l = \W(S)$.
+In line \ref{a2:remerel} we remove the segments between $e_r$ and $e_l$ but in lines \ref{a2:adlener} and \ref{a2:adlenel} we distribute the removed width to $e_r$ and $e_l$.
+Therefore the total width of the linked list of segments remains the same.
+Similarly, in line \ref{a2:rems}, we remove $S$ from the linked list of sinks but in lines \ref{a2:adlenls} and \ref{a2:adlenrs} we distribute the removed width to $S_l$ and $S_r$.
+Therefore the total width of the linked list of sinks remains the same.
+Therefore \ref{e2} holds.
+Since we add $d_r$ to both $\W(e_r)$ and $\W(S_l)$, the definition of $\W(S_l)$ continues to hold.
+Similarly for $\W(S_r)$.
+
+Note that after lines \ref{a2:adlener} and \ref{a2:adlenel}, $e_r$ and $e_l$ have the same length.
+Because of \ref{e4}, $e_r = \Bl(S) = \Br(S) = e_l$.
+Therefore \ref{e4} holds after line \ref{a2:rems}.
+
+Only the right boundary of $S_l$ and the left boundary of $S_r$ are affected by these modifications.
+Since $S_l$ and $S_r$ are neighbors after line \ref{a2:rems} and since the elevations of $e_r$ and $e_l$ are unchanged, $\Bl(S_l)$, $\Br(S_l)$, and $\B(S_l)$ remain accurate.
+Similarly for $S_r$.
+Therefore \ref{e10} holds.
+
+Note that $\E(S_l)$ is unchanged by our operations and that $\C(S_l)$, being defined only in terms of $\E(S_l)$ and $\B(S_l)$, remains accurate.
+If $\C(S_l)$ contains $e_r$, then $\Wc(S_l)$ becomes accurate after line \ref{a2:modwcsl}.
+Similarly for $S_r$.
+Therefore \ref{e7} holds.
+
+Since $d_r, d_l \ge 0$, \ref{e8} and \ref{e9} hold.
+
+If $\C(S_l)$ does not contain $e_r$, then it is clear that $\capp(S_l)$ is unaffected by the change in $\W(e_r)$.
+Otherwise, note that $\B(S_l) \le \Br(S_l) = e_r \le \B(S_l)$.
+Therefore $\B(S_l) = e_r$ and $\capp(S_l)$ is unaffected by the change in $\W(e_r)$.
+Therefore the definition of $\capp(S_l)$ continues to hold.
+Similarly for $S_r$.
+Hence and \ref{e11} holds.
+
+Since we recalculate $\ot(S_l)$ and $\ot(S_r)$ in lines \ref{a2:recalotsl} and \ref{a2:recalotsr}, they are accurate after the iteration.
+
+We have thus shown that \ref{e1} holds.
+
+Since $S$ was popped from $B$ and because of \ref{e13}, $S$ comes before $S_m$ in the total order of the sinks, that is $\ot(S)\le\ot(S_l')$.
+Therefore
+\begin{align*}
+    \Fill(S_l) &= \Fill(S_l') + (\ot(S)-\filltime(S_l'))\W(S_l') \\
+               &\le \Fill(S_l') + (\ot(S_l')-\filltime(S_l'))\W(S_l') \\
+               &= \Fill(S_l') + \left(\frac{\capp(S_l') - \Fill(S_l')}{\W(S_l')}\right)\W(S_l') \\
+               &= \capp(S_l') \\
+               &= \capp(S_l)
+\end{align*}
+Similarly for $S_r$.
+Therefore \ref{e16} holds.
+
+We set $\filltime(S_l) = \ot(S) < T$ in line \ref{a2:setflsl}.
+Note that
+\begin{align*}
+    \ot(S_l) &= \frac{\capp(S_l) - \Fill(S_l)}{\W(S_l)} + \filltime(S_l) \\
+             &\ge \filltime(S_l) \\
+             &= \ot(S).
+\end{align*}
+and $\ot(S)$ is the minimum of all $\ot(S_*)$.
+Similarly for $S_r$.
+Therefore \ref{e3} and \ref{e15} hold.
+
+Since we do not change the number of segments in $S_l$ and $S_r$, \ref{e6} holds.
+Since we have not changed the elevations of any of the segments in $S_l$ and $S_r$, \ref{e12} holds.
+
+Since we have removed exactly $S$ from $B$ and since we have removed exactly $S$ from the linked list in line \ref{a2:rems}, \ref{e13} holds.
+
+Since we removed $S$ from the linked list and did not modify the number of elements in $\E(S_*)$ or $\C(S_*)$ for any other $S_*$, \ref{e17} holds.
+
+For each $S_*$ in the list, between $\filltime(S_*')$ and $\ot(S)$, 
+\begin{align*}
+    (\ot(S) - \filltime(S_*'))\W(S_*')
+        &= (\ot(S) - \ot(S_*'))\W(S_*') + (\ot(S_*') - \filltime(S_*'))\W(S_*') \\
+        &= (\ot(S) - \ot(S_*'))\W(S_*') + \capp(S_*') - \Fill(S_*')
+\end{align*}
+square units of water fall directly on top of $S_*$.
+Recall that
+\begin{align*}
+    \capp(S_*') = \sum_{e\in\C(S_*')} \W(e)(\B(S_*')-e).
+\end{align*}
+is the amount of water that $S_*$ can hold before it overflows.
+Since $\Fill(S_*')\le\capp(S_*')$, $S_*$ does not overflow by filling it with $\Fill(S_*')$ square units of water.
+By \ref{e18}, applying the SLM algorithm to $S_*$ with $V=\Fill(S_*')$ yields the elevation levels at time $\filltime(S_*')$.
+By lemma \ref{compose}, applying the algorithm with $V=\Fill(S_*')$ and then with $V=(\ot(S) - \filltime(S_*'))\W(S_*')$ is the same as applying it once with $V=(\ot(S) - \ot(S_*'))\W(S_*') + \capp(S_*')$.
+Since the first summand is non-positive, we see that no $S_*$ overflows between $\filltime(S_*')$ and $\ot(S)$.
+
+Note that as long as no sink overflows, there is a bijection between the volume of water in a sink and the time at which this volume has fallen into the sink.
+
+For $S_* = S$, we see that at time $\ot(S)$ it is filled with $\capp(S)$ square units of water.
+Therefore the elevation levels of all $e\in\C(S)$ become $\B(S)$.
+
+We now show that \ref{e18} continues to hold for $S_l$ and $S_r$.
+By the discussion above, we know that the amount of water in $S_l'$ at time $\filltime(S) = \ot(S)$ is
+\begin{align*}
+    &(\ot(S) - \ot(S_l'))\W(S_l') + \capp(S_l') \\
+  = &\left(\ot(S) - \frac{\capp(S_l') - \Fill(S_l')}{\W(S_l')} - \filltime(S_l)\right)\W(S_l') + \capp(S_l') \\
+  = &\left(\ot(S) - \filltime(S_l)\right)\W(S_l') + \Fill(S_l') \\
+  = &\Fill(S_l).
+\end{align*}
+And therefore $\Fill(S_l)\le\capp(S_l')$.
+Therefore applying the SLM algorithm to the original $S_l'$ with volume $\Fill(S_l)$ yields the elevation levels at time $\filltime(S_l)$.
+
+Recall that $e_r\ge\B(S_l')$.
+Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is, the SLM algorithm returns the segment $e_r$ unchanged.
+Therefore, extending the segment $e_r$ has no effect on the output of the algorithm.
+
+Therefore applying the algorithm to $S_l$ returns the correct levels in the area previously covered by $S_l'$.
+Recall that in the area to the right of $S_l$ that was previously covered by $S$, the elevation levels have risen to be exactly $e_r$.
+Therefore the algorithm returns the correct levels everywhere.
+
+A similar discussion applies to $S_r$.
+Therefore \ref{e18} holds.
+
+\textbf{Case 2}: $\Bl(S) < \Br(S)$ in line \ref{a2:bllessbr}.
+
+Since $\Bl(S) < \infty$, there is a sink to the left of $S$ and the operation in
+in line \ref{a2:getsm} is well-defined.
+
+Let $e_r$ be as in line \ref{a2:geter2}.
+
+In line \ref{a2:remcs} we remove the elements of $\C(S)$ from the linked list of segments but in line \ref{a2:addwer} we add the removed width to $e_r$.
+Therefore, the total width of the linked list of segments remains the same.
+Similarly, in line \ref{a2:rems2}, we remove $S$ from the linked list of sinks but in line \ref{a2:addwsm} we add the removed width to $S_m$.
+Therefore, the total width of the linked list of sinks remains the same.
+In line \ref{a2:extend} we extend $\E(S_m)$ to contain the remaining elements of $\E(S)$.
+Therefore all elements in the linked list of segments are contained in a sink.
+Therefore \ref{e2} holds.
+
+Since $\Wc(S) > 0$ in line \ref{a2:addwer}, \ref{e9} holds.
+Since we only modify $\W(S_m)$ and $\Wc(S_m)$ by adding positive numbers to them, \ref{e8} holds.
+Similarly, we only add non-negative numbers to $\capp(S_m)$.
+Therefore \ref{e11} holds.
+
+Note that the segments that we add to $\E(S_m)$ in line \ref{a2:extend} have a length of $\W(S) - \Wc(S)$.
+However, since we extended $e_r$ by $\Wc(S)$ in line \ref{a2:addwer}, the total growth of the width of the segments in $\E(S_m)$ is $\W(S)$ as in line \ref{a2:addwsm}.
+Therefore the definition of $\W(S_m)$ continues to hold.
+
+If there is no sink to the right of $S$, it is clear that \ref{e4} continues to hold.
+Otherwise, note that, since $\Bl(S) < \Br(S)$, the last element of $\E(S)$ is not in $\C(S)$.
+Therefore, this element was added to $\E(S_m)$ in line \ref{a2:extend}.
+Therefore \ref{e4} continues to hold.
+
+Only the right boundary of $S_m$ is affected by these changes.
+In line \ref{a2:bru} we update $\Br(S_m)$ to have the correct value.
+In line \ref{a2:bu} we update $\B(S_m)$ to have the correct value.
+Since $\Br(S_m') = \Bl(S) < \Br(S) = \Br(S_m)$, \ref{e10} holds.
+
+Since we only add elements to $\C(S_m)$ in lines \ref{a2:cext1} and \ref{a2:cext2}, \ref{e7} holds.
+
+Since we do not remove any segments from $\E(S_m)$, \ref{e6} holds.
+
+We compute as in the previous case $\Fill(S_m) \le \capp(S_m') \le \capp(S_m)$.
+Therefore \ref{e16} holds.
+We set $\filltime(S_m) = \ot(S) < T$ in line \ref{a2:setflsm}.
+We compute as in the previous case $\ot(S_m)\ge\filltime(S_m)=\ot(S)$.
+Therefore \ref{e3} and \ref{e15} hold.
+
+Since we have removed exactly $S$ from $B$ and since we have removed exactly $S$ from the linked list in line \ref{a2:rems2}, \ref{e13} holds.
+
+Note that $e > \Bl(S)$ for all $e\in\E(S)\setminus\C(S)$.
+In line \ref{a2:extend} we extend $\E(S_m)$ only by those elements in $\E(S)\setminus\C(S)$.
+Let $e_m$ be the local minimum in $\E(S_m')$.
+Then $e_m\le e_r=\Bl(S)<e$ for any $e\in\E(S)\setminus\C(S)$.
+Furthermore, note that the local minimum of $S$ was contained within $\C(S)$.
+Since $\C(S)$ was a continuous subset of $\E(S)$ that contained the leftmost segment in $S$, all elements in $\E(S)\setminus\C(S)$ are monotonically increasing.
+Therefore $e_m$ remains the single local minimum of $\E(S_m)$ and $\E(S_m)$ is fully merged.
+Therefore $\ref{e12}$ holds.
+
+Note that when we reach line \ref{a2:bu}, we have moved the elements of $\E(S)\setminus\C(S)$ to $\E(S_m)$.
+Since we have removed $S$ from the linked list, the value of $\sum_S\left(\norm{\E(S)} - \norm{\C(S)}\right)$ remains the same.
+Whenever we reach lines \ref{a2:dec1} or \ref{a2:dec2}, we extend $\C(S_m)$ by one segment.
+Therefore $\norm{\E(S_m)} - \norm{\C(S_m)}$ decreases by one.
+Therefore \ref{e17} holds.
+
+Let $\C_*(S_m)$, $\capp_*(S_m)$, and $\W_{c*}(S_m)$ be the correctly calculated values of these properties based on the other properties that have been calculated up to this point.
+We will now show that the rest of the code transforms $\C(S_m')$, $\capp(S_m')$, and $\Wc(S_m')$ to match these values.
+
+Note that
+\begin{align*}
+    \capp(S_m') &= \sum_{e\in\C(S_m')} \W(e')(\B(S_m')-e) \\
+                &= \sum_{e\in\C(S_m')} \W(e)(\B(S_m')-e)
+\end{align*}
+since $\W(e)$ only changed for $e_r$ for which $e_r\ge\B(S_m')$.
+Therefore
+\begin{align*}
+    \capp_*(S_m) - \capp(S_m') &= \sum_{e\in\C_*(S_m)} \W(e)(\B(S_m)-e) - \sum_{e\in\C(S_m')} \W(e)(\B(S_m')-e) \\
+               &= \sum_{e\in C_1\cup C_2}\W(e)(\B(S_m)-e) + \sum_{e\in\C(S_m')} \W(e)(\B(S_m)-\B(S_m')) \\
+               &= \sum_{e\in C_1\cup C_2}\W(e)(\B(S_m)-e) + \Wc(S_m)(\B(S_m) - \B(S_m'))
+\end{align*}
+where $C_1$ are the elements from $\C_*(S_m)$ to the left of $\C(S_m')$ and $C_2$ are the elements from $\C_*(S_m)$ to the right of $\C(S_m')$.
+
+Note that at this point we have already updated $\Wc(S_m)$ to account for the increased width of $e_r$ if $e_r\in\C(S_m')$.
+
+Since we have already shown that $S_m$ has a single local minimum, we know that $C_1$ and $C_2$ are continuous sequences starting immediately to the left and right of $\C(S_m')$.
+Therefore we can walk $\E(S_m)\setminus\C(S_m')$ starting immediately to the left (right) of $\C(S_m')$ until we find a segment $e$ for which $\B(S_m)\ge e$ no longer holds.
+
+In line \ref{a2:inccap} we add the second summand from the equation above to $\capp(S_m)$.
+In lines \ref{a2:walkstart} to \ref{a2:walkstop} we perform the walks described above and update $\C(S_m)$, $\capp(S_m)$, and $\Wc(S_m)$ to the correct values.
+
+In line \ref{a2:recalotsm} we set $\ot(S_m)$ to the correct value.
+
+Therefore \ref{e1} holds.
+
+We now show that \ref{e18} continues to hold for $S_m$.
+Recall from the previous case that the amount of water in $S_m'$ at time $\filltime(S) = \ot(S)$ is $\Fill(S)$ and that $\Fill(S)\le\capp(S_m')$.
+Therefore applying the SLM algorithm to the original $S_m'$ with volume $\Fill(S)$ yields the elevation levels at time $\filltime(S_m)$.
+
+Recall that $e_r\ge\B(S_m')$.
+Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is the SLM algorithm returns the segment $e_r$ unchanged.
+Therefore extending the segment $e_r$ has no effect on the output of the algorithm.
+
+Therefore applying the algorithm to $S_m$ returns the correct levels in the area previously covered by $S_m'$.
+Recall by the discussion from the previous case that in the area to the right of $S_m$ that was previously covered by $\C(S)$, the elevation levels have risen to be exactly $e_r$.
+Therefore the algorithm returns the correct levels in the area previously covered by $\C(S)$.
+
+Note that the elevation level in $\E(S)\setminus\C(S)$ were left unchanged by the rain falling on $S$ and that these levels are all above $e_r$.
+Therefore, since $S_l$ contains these segments unchanged, the algorithm returns the correct levels everywhere.
+
+Therefore \ref{e18} holds.
+
+\textbf{Case 3}: $\Bl(S) > \Br(S)$ in line \ref{a2:bllessbr}.
+
+This is identical to the previous case.
+
+This completes the proof by induction.
+
+\textbf{Part 2}: We now show that the algorithm computes the correct elevation levels.
+
+Note that after the first loop ends, \ref{e18} continues to hold.
+As in case 1 above, we see that the amount of water in $S$ at time $T$ is
+\begin{align*}
+    &(T - \ot(S))\W(S) + \capp(S) \\
+  = &\left(T - \frac{\capp(S) - \Fill(S)}{\W(S)} - \filltime(S)\right)\W(S) + \capp(S) \\
+  = &\left(T - \filltime(S)\right)\W(S) + \Fill(S).
+\end{align*}
+Note that this is the value that we assign to $\Fill(S)$ in line \ref{a2:lastfill}.
+In particular, $\Fill(S)\le\capp(S)$.
+By the discussion in case 1 above, applying the SLM algorithm to $S$ with $V=\Fill(S)$ yields the elevation levels at time $T$ for the part of the terrain that is covered by $\E(S)$.
+By \ref{e2}, $\E(S)$ are a partition of the terrain.
+Therefore the algorithm calculates the levels for the entire terrain.
+
+\textbf{Part 3}: We show that the algorithm runs in $\bO(n\log(n))$.
+
+Note that during the construction of the sinks, we split each segment at most once.
+Therefore, after constructing the sinks, there are at most $2n$ segments in the linked list of segments and $2n$ sinks in the linked list of sinks.
+Constructing the sinks can be performed in $\bO(n)$.
+Hence, $B$ also contains at most $2n$ elements.
+Constructing $B$ can be performed in $\bO(n\log(n))$.
+
+Since we remove one element from $B$ per iteration of the outer loop and since we never add any elements to $B$, the outer loop runs at most $2n$ times.
+Furthermore, since $\sum_S\left(\norm{\E(S)} - \norm{\C(S)}\right) \le 2n$, by \ref{e17}, the inner loops between lines \ref{a2:walkstart} to \ref{a2:walkstop} iterate at most a total of $2n$ times over the entire runtime of the algorithm.
+Therefore we visit each line in the algorithm at most $2n$ times.
+Popping an element from $B$ takes $\bO(\log(n))$ time.
+Modifying the $\ot(S_l)$, $\ot(S_r)$, and $\ot(S_m)$ takes $\bO(\log(n))$ time since we have to maintain the heap property of $B$.
+Every other operation within the outer loop is $\bO(1)$.
+Therefore the outer loop runs in $\bO(n\log(n))$.
+
+In the second loop, applying the SLM algorithm takes $\bO(\norm{\E(S)})$ time.
+Since $\sum_S\norm{\E(S)}\le 2n$, all applications combined run in $\bO(n)$ time.
+\end{proof}
+
+\begin{proof}[Proof of corollary \ref{mainresult}] 
+Given $(e_1,\ldots,e_n)$, compute the fully merged elevation sequence in $\bO(n)$ time.
+Apply the previous theorem to compute the elevation levels at time $T$ in $\bO(n\log(n))$ time.
+Retrieve the elevation levels at the points $\{0,\ldots,n-1\}$ by applying lemma \ref{retrieval} in $\bO(n\log(n))$ time.
+\end{proof}
+
+\end{document}

@@ -1,0 +1,40 @@
+name: deploy
+
+on:
+  push:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install rust
+      run: |
+        curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    - name: Run tests
+      run: |
+        cd core
+        cargo test
+    - name: Install wasm-pack
+      run: |
+        cargo install wasm-pack
+    - name: Build wasm
+      run: |
+        cd wasm
+        export GIT_COMMIT=$(git rev-parse --short HEAD)
+        wasm-pack build
+    - name: Build site
+      run: |
+        cd wasm/www
+        npm install
+        npm run build
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@4.1.7
+      with:
+        branch: gh-pages
+        folder: wasm/www/dist
