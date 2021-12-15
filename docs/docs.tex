@@ -13,13 +13,18 @@
 \newtheorem{rem}{Remark}
 \newtheorem{defi}{Definition}
 \newtheorem{ex}{Example}
+\newtheorem{nota}{Notation}
 
 \newcommand{\inv}[1]{\frac{1}{#1}}
 \newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
+\newcommand{\Np}{\mathbb{N}_+}
 \newcommand{\bO}{\mathcal{O}}
 \newcommand{\Rp}{\mathbb{R}_+}
+\newcommand{\Rnn}{\mathbb{R}_{\ge0}}
+
+\DeclareMathOperator{\capp}{cap}
 
 \makeatletter
 \def\thm@space@setup{\thm@preskip=\parskip \thm@postskip=0pt}
@@ -27,40 +32,62 @@
 
 \begin{document}
 
-Let $\Rp$ be the set of non-negative real numbers.
-Let $n\in\N, n > 0$ and let  $e_1, \ldots, e_n \in \Rp$ be a finite sequence describing the elevation levels of a terrain.
+\begin{nota}
+  We write
+  \begin{itemize}
+    \item $\Rp = (0, \infty)$ for the set of positive real numbers,
+    \item $\Rnn = [0, \infty)$ for the set of non-negative real numbers, and
+    \item $\Np = \{ 1, 2, \ldots \}$ for the set of positive natural numbers.
+  \end{itemize}
+\end{nota}
+
+Let $n\in\Np$ and let  $(e_1, \ldots, e_n) \in \Rp^n$ be a finite sequence describing the elevation levels of a terrain.
 Assume that each $e_i$ describes a segment with a width of $1$ unit.
 
 Assume that it is raining and that each segment receives $1$ square unit of water per hour.
-The task is to find an algorithm that outputs the water level of each segment after $T\in\Rp$ hours while taking into account the effects of gravity.
+The task is to find an algorithm that outputs the elevation of each segment after $T\in\Rp$ hours while taking into account the effects of gravity.
 
 \begin{ex}
   The following terrain could be described by the sequence $10, 30, 50, 70, 90, 0, 70, 50$.
   \begin{center}
     \includegraphics{im1.pdf}
   \end{center}
-  After $16$ hours it would then look as follows with the water levels being $54, 54, 54, 70, 90, 36, 70, 70$.
+  After $16$ hours it would then look as follows with the elevations being $54, 54, 54, 70, 90, 36, 70, 70$.
   \begin{center}
     \includegraphics{im2.pdf}
   \end{center}
 \end{ex}
 
-\begin{rem}
-    As seen in the example, we include the underlying elevation of the segment in the water level.
-    That is, the water level of the segment $i$ will never be lower than $e_i$.
-\end{rem}
-
 In the following we will no longer assume that each $e_i$ describes a segment with a width of $1$ unit.
 Instead, let $w_1,\ldots,w_n \in \Rp$ with $w_i > 0$ be a sequence describing the width of the segments.
 The original problem can then be solved by setting $w_i = 1$.
 
+\begin{defi}
+  Let $n\in\Np$.
+  We say that $(e_1,\ldots,e_n)$ is an elevation sequence with widths $(w_1,\ldots,w_n)$ if
+  $(e_1,\ldots,e_n) \in \Rnn^n$ and $(w_1,\ldots,w_n) \in \Rp^n$.
+\end{defi}
+
 In our generalized setting, each segment $i$ receives $w_i$ square units of water per hour.
 
-In the first step, we will look at the case where the terrain has a single local minimum.
+Note that the problem is invariant under splitting of segments and merging of adjacent segments with identical elevation.
+
+By splitting we mean replacing $e_i$ in place by $e_{i,1} = e_{i,2} = e_i$ and $w_i$ by $w_{i,1}, w_{i,2}$ with $w_{i,1} + w_{i,2} = w_i$.
+
+By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\hat{e}_i = e_i$ and $w_i, w_{i+1}$ by $\hat{w}_i = w_i + w_{i+1}$.
 
 \begin{defi}
-    We say that the sequence $e_1,\ldots,e_n$ has a single local minimum if there is an
+    Let $n\in\Np$ and let $(e_1,\ldots,e_n)$ be an elevation sequence.
+    \begin{enumerate}
+    \item We say that $(e_1,\ldots,e_n)$ is fully merged if $e_i \ne e_{i+1}$ for all $i\in\{1,\ldots,n - 1\}$.
+    \item Let $m\in\Np$ and let $(\tilde{e}_1,\ldots,\tilde{e}_m)$ be an elevation sequence.
+        We say that $(e_1,\ldots,e_n)$ and $(\tilde{e}_1,\ldots,\tilde{e}_m)$ are equivalent if the fully merged versions of both sequences are identical.
+    \item We say that $(e_1,\ldots,e_n)$ has a single local minimum if there is an
     $i\in\{1,\ldots,n\}$ such that $e_1,\ldots,e_i$ is monotonically decreasing and $e_i,\ldots,e_n$ is monotonically increasing.
+    \item Assume that $(e_1,\ldots,e_n)$ is fully merged.
+        Let $i\in\{2,\ldots,n-1\}$.
+        We say that $e_i$ is a local maximum if $e_{i-1}<e_i$ and $e_i>e_{i+1}$.
+    \end{enumerate}
 \end{defi}
 
 \begin{ex}
@@ -74,44 +101,116 @@ In the first step, we will look at the case where the terrain has a single local
   \end{center}
 \end{ex}
 
-In the second step, we will split terrains into disjoint sequences (called sinks) that each have a single local minimum.
+\begin{lem}
+    Let $n\in\Np$ and let $(e_1,\ldots,e_n)$ be an elevation sequence.
+    The fully merged version of $(e_1,\ldots,e_n)$ can be computed in $\bO(n)$ time.
+\end{lem}
 
-\begin{ex}
-  The second example above can be split as follows:
-  \begin{center}
-    \includegraphics{im5.pdf}
-  \end{center}
-\end{ex}
-
-For this purpose, note that the problem is invariant under splitting of segments and merging of adjacent segments with identical elevation.
-
-By splitting we mean replacing $e_i$ in place by $e_{i,1} = e_{i,2} = e_i$ and $w_i$ by $w_{i,1}, w_{i,2}$ with $w_{i,1} + w_{i,2} = w_i$.
-
-By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\hat{e}_i = e_i$ and $w_i, w_{i+1}$ by $\hat{w}_i = w_i + w_{i+1}$.
-
-For each
-\begin{align*}
-    x \in \left[0, \sum_{i=1}^n w_i\right)
-\end{align*}
-we can determine the $i$ that contains it by iteratively summing the $w_i$ until the sum exceeds $x$.
-With this $i$ we can then determine the original elevation $e_i$ or the resulting water level.
-
-For a finite sequence $x_1,\ldots,x_m$ as above, we can first sort the sequence in $\bO(m\log(m))$ and then determine the elevations or water levels as above by applying the same algorithm in $\bO(\max(m\log(m), n))$ time.
-Note that in this case we do not restart the iterative summation for each $x_i$ as this would require $\bO(n^2)$ time.
-Instead we use that the $x_i$ are sorted and continue the ongoing summation after we have found the index for the previous element.
+\begin{proof}
+    Iterate over the $e_i$ in ascending order.
+    If $e_{i+1} = e_i$, merge the two elements.
+    Otherwise move to the next element.
+\end{proof}
 
 \begin{lem}
-    Assume that $e_1,\ldots,e_n$ has a single local minimum and $T\in\Rp$.
-    Without loss of generality, by merging, we can assume that no two adjacent $e_j$ are identical.
+  Let $n,m\in\Np$, $m < n$, and let $(e_1,\ldots,e_n), (\hat{e}_1,\ldots,\hat{e}_m)$ be equivalent elevation sequences. Let
+  \begin{align*}
+      x \in \left[0, \sum_{i=1}^n w_i\right)
+  \end{align*}
+  be a point in the terrain.
+  The elevation level at $x$ can be determined from $(e_1,\ldots,e_n)$, $(\hat{e}_1,\ldots,\hat{e}_m)$ in $\bO(n)$ time and this process yields the same value for both sequences.
+
+  For $l\in\Np$ and $x_1,\ldots,x_l$ as above, the elevation levels at these points can be determined
+  in $\bO(\max(l\log(l), n))$ time.
+\end{lem}
+
+\begin{proof}
+    It is sufficient to assume that $(\hat{e}_1,\ldots,\hat{e}_m)$ is the fully merged version of $(e_1,\ldots,e_n)$.
+
+    We can determine in $\bO(n)$ time the smallest $j$ such that $\sum_{i=1}^j w_i > x$.
+    Then the elevation level is $e_j$.
+
+    We can transform $(\hat{e}_1,\ldots,\hat{e}_m)$ into $(e_1,\ldots,e_n)$ by performing a finite number of splitting steps.
+    Assume that it takes a single step such that $(e_1,\ldots,e_k,e_{k+1},\ldots,e_n) = (\hat{e}_1,\ldots,\hat{e}_k,\hat{e}_k,\ldots,\hat{e}_m)$ for some $k\in{1,\ldots,m}$.
+
+    If $r<k$ then $\sum_{i=1}^r \hat{w}_i = \sum_{i=1}^r w_i$.
+    If $r\ge k$ then $\sum_{i=1}^r \hat{w}_i = \sum_{i=1}^{r+1} w_i$.
+
+    Let $\hat{j}$ be the smallest integer such that $\sum_{i=1}^{\hat{j}} \hat{w}_i > x$.
+
+    If $\hat{j}<k$ then $\sum_{i=1}^{\hat{j}} w_i = \sum_{i=1}^{\hat{j}} \hat{w}_i > x$, hence $k > \hat{j} \ge j$ by the definition of $j$.
+    Furthermore $\sum_{i=1}^j \hat{w}_i = \sum_{i=1}^j w_i > x$, hence $j \ge \hat{j}$ by the definition of $\hat{j}$. 
+    Therefore $j = \hat{j} < k$ and $e_j = e_{\hat{j}} = \hat{e}_{\hat{j}}$.
+
+    If $\hat{j}=k$ then $\sum_{i=1}^{k-1} w_i = \sum_{i=1}^{k-1} \hat{w}_i \le x$.
+    Hence $j\ge k$ by the definition of $j$.
+    Furthermore: $\sum_{i=1}^{k+1} w_i = \sum_{i=1}^k \hat{w}_i > x$.
+    Hence $j\le k+1$ by the definition of $j$.
+    However, by our assumption $e_k = e_{k+1} = \hat{e}_k$.
+    Therefore $e_j = \hat{e}_{\hat{j}}$.
+
+    If $\hat{j}>k$ then $\sum_{i=1}^{\hat{j}+1} w_i = \sum_{i=1}^{\hat{j}} \hat{w}_i > x$.
+    Hence $j\le \hat{j}+1$ by the definition of $j$.
+    Furthermore $\sum_{i=1}^{\hat{j}} w_i = \sum_{i=1}^{\hat{j}-1} \hat{w}_i \le x$ by the definition of $\hat{j}$.
+    Hence $j > \hat{j}$ by the definition of $j$.
+    Therefore $j = \hat{j}+1$ and $e_j = e_{\hat{j}+1} = \hat{e}_{\hat{j}}$.
+
+    The case where there is more than one splitting step now follows immediately by induction.
+
+    For the $x_1,\ldots,x_l$, we can first assume that they are sorted in ascending order by applying a sorting algorithm in $l\log(l)$ time.
+    Then we iterate over the $x_i$ and apply the algorithm above except that, since the $x_i$ are sorted, we do not have to restart the summation for each $x_i$.
+    Hence, this iteration completes in $\bO(max(l, n))$ time.
+\end{proof}
+
+\begin{lem}
+  Let $n\in\Np$, $T\in\Rnn$, and let $(e_1,\ldots,e_n)$ be an elevation sequence with widths $1$.
+  Assume that we have an algorithm that produces the elevation of the terrain after $T$ hours of rain in form of an elevation sequence with $m \le 2n$ segments in $\bO(n\log(n))$ time.
+  Then we can determine the solution to the original problem in $\bO(n\log(n))$ time.
+\end{lem}
+
+\begin{proof}
+  Let $(x_1,\ldots,x_n) = (0,\ldots,n-1)$.
+  By applying the algorithm from the previous lemma to the output of the algorithm from this lemma,
+  we determine the elevation levels at the points $x_i$ in $\bO(\max(n\log(n), 2n)) = \bO(n\log(n))$ time.
+\end{proof}
+
+\begin{lem}
+  Let $n\in\Np$ and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence.
+  The following statements are equivalent:
+  \begin{enumerate}
+    \item $(e_1,\ldots,e_n)$ has a single local minimum.
+    \item $(e_1,\ldots,e_n)$ has no local maxima.
+  \end{enumerate}
+\end{lem}
+
+\begin{proof}
+  $\Rightarrow$: Assume that $(e_1,\ldots,e_n)$ has a single local minimum $e_i$.
+  For $i \le j < k$, $e_j \le e_k$, therefore $e_j$ is not a local maximum.
+  For $k > j \ge i$, $e_k \ge e_j$, therefore $e_j$ is not a local maximum.
+
+  $\Leftarrow$: Assume that $(e_1,\ldots,e_n)$ has no local maxima.
+  Let $i$ such that $e_i = \min(e_1,\ldots,e_n)$.
+  We show by induction over $j \in \{i,\ldots,n-1\}$ that $e_j < e_{j+1}$.
+  For $j = i$ it follows by the definition of $i$ and the fact that the sequence is fully merged.
+  Assume that the statement holds for $j-1$, that is, $e_{j-1} < e_j$.
+  If $e_j > e_{j+1}$, then $e_j$ would be a local maximum.
+  Since this is not possible, $e_j < e_{j+1}$.
+  By an identical induction, we see that $e_{j-1} > e_j$ for $j \in \{2,\ldots,i\}$.
+\end{proof}
+
+In the first step, we will look at the case where the terrain has a single local minimum.
+
+\begin{lem}
+    Let $n\in\Np$, $T\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence with a single local minimum.
     Then the following algorithm calculates the water levels at time $T$ in $\bO(n)$ time.
 \end{lem}
 
 \begin{algorithm}[H]
     Let $i$ be such that $e_i$ is the local minimum of the sequence\; \label{a1:minimum}
-    For all $j$, $e_j^0 := e_j$\;
+    For all $j$, $e_j^0 := e_j$ and $w_j^0 := w_j$\;
     $i^0 := i$\;
     $n^0 := n$\;
-    $V := T\sum_{j=1}^n w_i$\;
+    $V := T\sum_{j=1}^n w_i$\; \label{a1:compv}
     $K := 0$\;
     \While{true}{ \label{a1:while}
         $l := \infty$\;
@@ -123,23 +222,23 @@ Instead we use that the $x_i$ are sorted and continue the ongoing summation afte
             $r := e_{i^K+1}^K$\;
         }
         $m := \min(l, r)$\;
-        $u := mw_{i^K}$\;
-        \If{$V \le u$}{
-            $e_{i^K}^K := e_{i^K}^K + \frac{V}{w_{i^K}}$\;
+        $u := (m-e_{i^K}^K)w_{i^K}$\;
+        \If{$V < u$}{ \label{a1:vleu}
+            $e_{i^K}^K := e_{i^K}^K + \frac{V}{w_{i^K}}$\; \label{a1:vplus}
             break\; \label{a1:break}
         }
-        $e_{i^K}^K := m$\;
+        $e_{i^K}^K := m$\; \label{a1:newe}
         \eIf{$l = r$}{ \label{a1:leqr}
-            $n^{K+1} := n^K - 2$\;
+            $n^{K+1} := n^K - 2$\; \label{a1:min2}
         }{
-            $n^{K+1} := n^K - 1$\;
+            $n^{K+1} := n^K - 1$\; \label{a1:min1}
         }
         Merge $e_{i^K}^K$ with the surrounding segments if possible\; \label{a1:merge}
-        Call the resulting sequence $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$\;
-        \eIf{$l \le r$}{
-            $i^{K+1} := i^K - 1$\;
+        Call the resulting sequence $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $w_1^{K+1},\ldots,w_{n^{K+1}}^{K+1}$\;
+        \eIf{$l \le r$}{ \label{a1:ller}
+            $i^{K+1} := i^K - 1$\; \label{a1:imin1}
         }{
-            $i^{K+1} := i^K$\;
+            $i^{K+1} := i^K$\; \label{a1:imin0}
         }
         $K := K + 1$\;
         $V := V - u$\;
@@ -148,16 +247,192 @@ Instead we use that the $x_i$ are sorted and continue the ongoing summation afte
 \end{algorithm}
 
 \begin{proof}
-The local minimum in line \ref{a1:minimum} can be determined in $\bO(n)$ time by iterating over the sequence.
+The proof consists of 4 parts. In part 1 we show that the algorithm is well-formed.
+In part 2 we show that it can be expressed recursively.
+In part 3 we show that it computes the water levels.
+In part 4 we show that it runs in $\bO(n)$ time.
 
-By induction over $K$ we show that $i^K <= n^K$ and that $n^{K+1}$ is in fact the length of the sequence after the merge step in line \ref{a1:merge}.
+\textbf{Part 1}: By induction over $K$ we show that $i^K \le n^K$ and that $n^{K+1}$ is in fact the length of the sequence after the merge step in line \ref{a1:merge}.
+Note that we only show it for those finitely many $K$ that appear in the algorithm.
 
-If $l = r$ in line \ref{a1:leqr}, then $lw_{i^K} = \min(l,r)w_{i^K} = mw_{i^K} = u < V < \infty$ since otherwise, if $u \ge V$, we would have broken out of the loop in \ref{a1:break}.
+For $K=0$ it is clear.
+Assume that the condition holds for $K = \tilde{K}$ and that we have started the loop with $K$ set to this value.
+If $V < u$ holds in line \ref{a1:vleu}, then the loop ends and it is nothing to show.
+Otherwise assume that $V \ge u$.
+
+If $l = r$ in line \ref{a1:leqr}, then $(l - e_{i^K}^K)w_{i^K} = (\min(l,r) - e_{i^K}^K)w_{i^K} = (m - e_{i^K}^K)w_{i^K} = u \le V < \infty$.
 Therefore, since $w_{i^K} > 0$, $l = r < \infty$.
 By the definitions of $l$ and $r$, it follows that $i^K > 1$ and $i^K < n^K$ and therefore
 $e_{i^K-1}^K = l = r = e_{i^K+1}^K$.
+After setting $e_{i^K}^K := m = l = r$ in line \ref{a1:newe}, the merge step in line \ref{a1:merge} merges $e_{i^K - 1}^K, e_{i^K}^K$, and $e_{i^K + 1}^K$.
+Therefore the resulting sequence contains two fewer elements and the assignment $n^{K+1} := n^K - 2$ in line \ref{a1:min2} was correct.
+Furthermore, in line \ref{a1:imin1}, $i^{K+1} := i^K - 1 \le n^K - 1 - 1 = n^{K+1}$.
+
+Otherwise if $l < r$ then $l < \infty$ and $i^K > 1$ and therefore $e_{i^K-1}^K = l$.
+After setting $e_{i^K}^K := m = l$ in line \ref{a1:newe}, the merge step in line \ref{a1:merge} merges $e_{i^K - 1}^K$ and $e_{i^K}^K$.
+Therefore the resulting sequence contains one fewer element and the assignment $n^{K+1} := n^K - 1$ in line \ref{a1:min1} was correct.
+Furthermore, in line \ref{a1:imin1}, $i^{K+1} := i^K - 1 \le n^K - 1 = n^{K+1}$.
+
+Otherwise if $l > r$ then $r < \infty$ and $i^K < n^K$ and therefore $e_{i^K+1}^K = r$.
+After setting $e_{i^K}^K := m = r$ in line \ref{a1:newe}, the merge step in line \ref{a1:merge} merges $e_{i^K}^K$ and $e_{i^K + 1}^K$.
+Therefore the resulting sequence contains one fewer element and the assignment $n^{K+1} := n^K - 1$ in line \ref{a1:min1} was correct.
+Furthermore, in line \ref{a1:imin0}, $i^{K+1} := i^K \le n^K - 1 = n^{K+1}$.
+
+This completes the proof by induction.
+
+\textbf{Part 2}: By induction over $K$ we show that the sequence $e_1^K,\ldots,e_{n^K}^K$ has a single local minimum, that no two adjacent $e_j^K$ are identical, and that $e_{i^K}^K$ is the local minimum of the sequence.
+Note that these conditions are equivalent to the statement that the monotonicity in the definition of \textit{single local minimum} is strict.
+
+For $K=0$ it is clear.
+Assume that the condition holds for $K = \tilde{K}$ and that we have started the loop with $K$ set to this value.
+If $V < u$ holds in line \ref{a1:vleu}, then $e_{i^K}^K := e_{i^K}^K + \frac{V}{w_{i^K}} < e_{i^K}^K + \frac{u}{w_{i^K}} = m = \min(l, r)$.
+Hence, $e_{i^K}^K < \min(l, r)$ and $e_{i^K}^K$ remains the strict minimum of the sequence.
+Otherwise assume that $V \ge u$.
+
+If $l \le r$ in line \ref{a1:ller}, then $e_{i^K}^K := m = l$ in line \ref{a1:newe} and the merge step in line \ref{a1:merge} merges $e_{i^K - 1}^K$ and $e_{i^K}^K$.
+Since we set $i^{K+1} := i^K - 1$ in line \ref{a1:imin1},
+$(e_1^{K+1},\ldots,e_{i^{K+1}}^{K+1}) = (e_1^K,\ldots,e_{i^K - 1}^K)$ is strictly monotonically decreasing by induction.
+If $l < r$, then $(e_{i^{K+1}}^{K+1},\ldots,e_{n^{K+1}}^{K+1}) = (l,r,\ldots,e_{n^K}^K)$ is strictly monotonically increasing.
+Otherwise if $l = r$, then $(e_{i^{K+1}}^{K+1},\ldots,e_{n^{K+1}}^{K+1}) = (r,e_{i^K+2}^K,\ldots,e_{n^K}^K)$ is strictly monotonically increasing.
+(Note that in the case $l = r$ we merge 3 segments.)
+
+If $l > r$ in line \ref{a1:ller}, then $e_{i^K}^K := m = r$ in line \ref{a1:newe} and the merge step in line \ref{a1:merge} merges $e_{i^K}^K$ and $e_{i^K + 1}^K$.
+Since we set $i^{K+1} := i^K$ in line \ref{a1:imin1},
+$(e_1^{K+1},\ldots,e_{i^{K+1}}^{K+1}) = (e_1^K,\ldots,l,r)$ is strictly monotonically decreasing by induction.
+Furthermore $(e_{i^{K+1}}^{K+1},\ldots,e_{n^{K+1}}^{K+1}) = (r,\ldots,e_{n^K}^K)$ is strictly monotonically increasing.
+
+This completes the proof by induction.
+
+Note that the algorithm is tail recursive.
+Therefore we can reformulate it as a recursive function.
+Instead of jumping back to the start of the loop, we can invoke the algorithm again with
+the sequence set to $e_1^K,\ldots,e_{n^K}^K$ and $T$ set to $T - u/(\sum_{j=1}^{n}w_j)$.
+Recall that we have just proved that this sequence is a valid input for the algorithm and that $e_{i^K}^K$ is the minimum that is being computed in line \ref{a1:minimum}.
+
+\textbf{Part 3}: We can now prove by induction over $n$ that the algorithm computes the water levels.
+
+Step 1: $n = 1$ or $V < u$ during the first iteration of the loop. Note that $n = 1$ implies $V < \infty = u$.
+
+Note that $V := T\sum_{j=1}^n w_i$ is the total amount of water that falls onto the terrain until $T$.
+Since the $e_i$ is the single local minimum of the sequence and since it is a strict minimum, all water will flow to $e_i$ until the negative volume below the adjacent segments is used up.
+The following image shows the negative volume of an example.
+\begin{center}
+  \includegraphics{im6.pdf}
+\end{center}
+Note that $u := (\min(l, r)-e_{i^K}^K)w_i$ is the volume of this space.
+By our assumption, $V < u$, that is, all of the water fits into this space.
+In line \ref{a1:vplus}, the algorithm increases the height of $e_i$ by $V/w_i$ which is in fact the height a volume $V$ would take up in this space of width $w_i$.
+
+Step 2: Assume that the argument holds for all $\tilde{n} < n$.
+For $V < u$ we have already shown the result in step 1.
+Otherwise assume $V \ge u$.
+Let $u$ be as in the first iteration of the loop, $T_1 = u/(\sum_{j=1}^{n}w_j)$, and $T_2 = T - T_1 \ge 0$.
+We have shown above that invoking the algorithm with $T$ is the same as running the iteration once and then invoking the algorithm on the resulting sequence with $T = T_2$.
+Note that invoking the algorithm with $T_1$ runs the iteration once and then once more with $V = 0$.
+However, this second iteration has no effect on the output of the algorithm.
+Therefore, invoking the algorithm with $T$ is indentical to invoking the algorithm once with $T = T_1$ and then with $T = T_2$ on the output of the first invocation.
+During the first iteration of the invocation with $T = T_1$, we have $V = u \ge u$ in line \ref{a1:vleu}.
+Therefore the algorithm outputs a new sequence with length $n^1 < n$.
+
+Note that during the invocation of the algorithm with $T = T_1$ we have $V = u$.
+By an argument identical to that in step 1, this invocation computes the water level after rain has fallen for $T_1$ hours.
+By our induction assumption (since $n^1 < n$), invoking the algorithm with $T = T_2$ on the output of the first invocation calculates the water level after $T_2$ hours of rain, taking into account the changes in elevation caused by the first $T_1$ hours of rain.
+
+Since rain in the real world also composes, that is, rain for $T$ hours is the same as rain for $T_1$ hours and then $T_2$ hours (ignoring evaporation etc.), this completes the proof by induction.
+
+\textbf{Part 4}: Lastly we show that the algorithm completes in $\bO(n)$ time.
+Computing $i$ in line \ref{a1:minimum} takes $\bO(n)$ time.
+Computing $V$ in line \ref{a1:compv} takes $\bO(n)$ time.
+Within the loop, performing the merge only touches the elements to the immediate left and right of the local minimum; therefore, assuming an implementation via linked lists, this operation takes $\bO(1)$ time.
+All other operations within the loop are clearly $\bO(1)$.
+Each iteration of the loop decreases the length of the sequence by at least $1$ and the loop terminates when the length is $1$.
+Therefore the loop iterates at most $n$ times.
+
+This completes the proof.
 
 \end{proof}
 
+We can now solve the general problem using the following ansatz.
+
+Let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence.
+\begin{center}
+  \includegraphics{im8.pdf}
+\end{center}
+Note that on each local maximum, half of the water flows to the left and half flows to the right.
+Split each local maximum in half.
+\begin{center}
+  \includegraphics{im9.pdf}
+\end{center}
+We call each of these three components a \textit{sink}.
+Note that each sink has a single local minimum.
+Fill each sink uniformly and independently until any of the sinks overflows onto one of the bounding local maxima.
+\begin{center}
+  \includegraphics{im10.pdf}
+\end{center}
+Fill up the overflowing sink and merge it with the sink on the overflowing side.
+\begin{center}
+  \includegraphics{im12.pdf}
+\end{center}
+Note that the merged sink has a single local minimum.
+Repeat this process until $T$ is reached.
+Note that if only a single sink remains, that sink will never overflow since it has no bounding local maxima.
+
+One special case occurs if the sink overflows on both sides at the same time.
+\begin{center}
+  \includegraphics{im13.pdf}
+\end{center}
+In this case the overflowing sink is filled up, split in half, and divided equally between its neighbors.
+\begin{center}
+  \includegraphics{im14.pdf}
+\end{center}
+
+We will now define the sinks of an elevation sequence and its properties.
+
+Let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence and let $k_1,\ldots,k_m \in \{2,\ldots,n-1\}$ be its local maxima.
+
+If the sequence has no local maxima, then it has a single sink $S_1$ containing all of the segments.
+
+Otherwise, split each $e_{k_i}$ into $e_{k_i,1}$ and $e_{k_i,2}$, each having half of the width of $e_{k_i}$.
+Then $S_1$ consists of $(e_1,\ldots,e_{k_1,1})$.
+For $i\in\{2,\ldots,m\}$, $S_i$ consists of $(e_{k_{i-1},2},\ldots,e_{k_i,1})$.
+$S_{m+1}$ consists of $(e_{k_m,2},\ldots,e_n)$.
+
+If $S_i$ has no bounding maxima, then the \textsl{bounding height} $\mathcal{B}(S_i)$ of $S_i$ is $\infty$.
+Otherwise, if $S_i$ has a single bounding maximum $e_l$, then $\mathcal{B}(S_i)$ is $e_l$.
+Otherwise $S_i$ has a two bounding maxima $e_l$ and $e_r$ and $\mathcal{B}(S_i)$ is $\min(e_l, e_r)$.
+
+We write $\mathcal{E}(S_i)$ for the sequence of elevation levels in $S_i$.
+For example, $\mathcal{E}(S_i) = (e_{k_{i-1}^2},\ldots,e_{k_i^1})$ for $i\in\{2,\ldots,m\}$.
+We write $\mathcal{C}(S_i)$ for the subsequence of $\mathcal{E}(S_i)$ consisting of those $e$ for which $e \le \mathcal{B}(S_i)$.
+We write $\norm{\mathcal{E}(S_i)}$ for the number of elements in $\mathcal{E}(S_i)$ and $\norm{\mathcal{C}(S_i)}$ for the number of elements in $\mathcal{C}(S_i)$.
+
+It is clear that, since $\mathcal{E}(S_i)$ contains no local maximum, $\mathcal{C}(S_i)$ is a continuous subsequence of $\mathcal{E}(S_i)$.
+That is, if $e_a$, $e_b$, and $e_c$ are in $\mathcal{E}(S_i)$ in that order, and $e_a$ and $e_c$ are in $\mathcal{C}(S_i)$, then $e_b\in\mathcal{C}(S_i)$.
+Let $e_l$ and $e_r$ be the first and last elements in $\mathcal{E}(S_i)$.
+By the definition of $\mathcal{B}(S_i)$, $e_l\le\mathcal{B}(S_i)$ or $e_r\le\mathcal{B}(S_i)$.
+Therefore $e_l\in\mathcal{C}(S_i)$ or $e_r\in\mathcal{C}(S_i)$.
+
+If $e_l,e_r\in\mathcal{C}(S_i)$, then we say that $S_i$ overflows on both sides.
+Otherwise, if $e_l\in\mathcal{C}(S_i)$, we say that $S_i$ overflows on the left.
+Otherwise we say that $S_i$ overflows on the right.
+
+For each segment $e\in\mathcal{E}(S_i)$, let $\mathcal{W}(e)$ be the corresponding width.
+We define the capacity $\capp(S_i)$ of a sink as follows
+\begin{align*}
+    \capp(S_i) = \sum_{e\in\mathcal{C}(S_i)} \mathcal{W}(e)(\mathcal{B}(S_i)-e).
+\end{align*}
+Note that $\capp(S_i)$ is the volume of water $S_i$ can hold before it overflows.
+
+We define a total order on the sinks $S_i$ by the lexicographic order on the tuples $(\capp(S_i), i)$.
+That is, sinks with a lower capacity come first.
+If two sinks have the same capacity, the sink with the smaller index comes first.
+
+In our algorithm, we will maintain a priority queue containing all sinks.
+Popping an element from this queue always returns the sink that comes first in the order defined above.
+That is, it always returns the sink with the smallest capacity.
+
+Some of the properties above require more than $\bO(1)$ time to be computed.
+In these cases, we will assume that the propertise are calculated once and then cached.
+When merging two sinks we will re-calculate the cached values.
 
 \end{document}
