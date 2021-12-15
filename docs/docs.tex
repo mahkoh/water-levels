@@ -6,7 +6,7 @@
 \usepackage{parskip}
 \usepackage{svg}
 \usepackage{esint}
-\usepackage[ruled,linesnumbered]{algorithm2e}
+\usepackage[]{algpseudocode}
 
 \newtheorem{thm}{Theorem}
 \newtheorem{lem}{Lemma}
@@ -25,6 +25,9 @@
 \newcommand{\Rnn}{\mathbb{R}_{\ge0}}
 
 \DeclareMathOperator{\capp}{cap}
+\DeclareMathOperator{\ot}{ot}
+\DeclareMathOperator{\Fill}{fill}
+\DeclareMathOperator{\filltime}{filltime}
 
 \makeatletter
 \def\thm@space@setup{\thm@preskip=\parskip \thm@postskip=0pt}
@@ -201,50 +204,53 @@ By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\h
 In the first step, we will look at the case where the terrain has a single local minimum.
 
 \begin{lem}
-    Let $n\in\Np$, $T\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence with a single local minimum.
-    Then the following algorithm calculates the water levels at time $T$ in $\bO(n)$ time.
+    \label{alg1}
+    Let $n\in\Np$, $V\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence with a single local minimum.
+    The following algorithm calculates the elevation levels after pouring $V$ square units of water into the terrain.
+    The algorithm runs in $\bO(n)$ time.
 \end{lem}
 
-\begin{algorithm}[H]
-    Let $i$ be such that $e_i$ is the local minimum of the sequence\; \label{a1:minimum}
-    For all $j$, $e_j^0 := e_j$ and $w_j^0 := w_j$\;
-    $i^0 := i$\;
-    $n^0 := n$\;
-    $V := T\sum_{j=1}^n w_i$\; \label{a1:compv}
-    $K := 0$\;
-    \While{true}{ \label{a1:while}
-        $l := \infty$\;
-        \If{$i^K > 1$}{
-            $l := e_{i^K-1}^K$\;
-        }
-        $r := \infty$\;
-        \If{$i^K < n^K$}{
-            $r := e_{i^K+1}^K$\;
-        }
-        $m := \min(l, r)$\;
-        $u := (m-e_{i^K}^K)w_{i^K}$\;
-        \If{$V < u$}{ \label{a1:vleu}
-            $e_{i^K}^K := e_{i^K}^K + \frac{V}{w_{i^K}}$\; \label{a1:vplus}
-            break\; \label{a1:break}
-        }
-        $e_{i^K}^K := m$\; \label{a1:newe}
-        \eIf{$l = r$}{ \label{a1:leqr}
-            $n^{K+1} := n^K - 2$\; \label{a1:min2}
-        }{
-            $n^{K+1} := n^K - 1$\; \label{a1:min1}
-        }
-        Merge $e_{i^K}^K$ with the surrounding segments if possible\; \label{a1:merge}
-        Call the resulting sequence $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $w_1^{K+1},\ldots,w_{n^{K+1}}^{K+1}$\;
-        \eIf{$l \le r$}{ \label{a1:ller}
-            $i^{K+1} := i^K - 1$\; \label{a1:imin1}
-        }{
-            $i^{K+1} := i^K$\; \label{a1:imin0}
-        }
-        $K := K + 1$\;
-        $V := V - u$\;
-    }
-    The $e_1^K,\ldots,e_{n^K}^K$ are the water levels\;
-\end{algorithm}
+\vspace{1em}
+
+\begin{algorithmic}[1]
+    \State Let $i$ be such that $e_i$ is the local minimum of the sequence\; \label{a1:minimum}
+    \State For all $j$, $e_j^0 := e_j$ and $w_j^0 := w_j$
+    \State $i^0 := i$
+    \State $n^0 := n$
+    \State $K := 0$
+    \While{true} \label{a1:while}
+        \State $l := \infty$
+        \If{$i^K > 1$}
+            \State $l := e_{i^K-1}^K$
+        \EndIf
+        \State $r := \infty$
+        \If{$i^K < n^K$}
+            \State $r := e_{i^K+1}^K$
+        \EndIf
+        \State $m := \min(l, r)$
+        \State $u := (m-e_{i^K}^K)w_{i^K}$
+        \If{$V < u$} \label{a1:vleu}
+            \State $e_{i^K}^K := e_{i^K}^K + \frac{V}{w_{i^K}}$ \label{a1:vplus}
+            \State break \label{a1:break}
+        \EndIf
+        \State $e_{i^K}^K := m$ \label{a1:newe}
+        \If{$l = r$} \label{a1:leqr}
+            \State $n^{K+1} := n^K - 2$ \label{a1:min2}
+        \Else
+            \State $n^{K+1} := n^K - 1$ \label{a1:min1}
+        \EndIf
+        \State Merge $e_{i^K}^K$ with the surrounding segments if possible \label{a1:merge}
+        \State Call the resulting sequence $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $w_1^{K+1},\ldots,w_{n^{K+1}}^{K+1}$
+        \If{$l \le r$} \label{a1:ller}
+            \State $i^{K+1} := i^K - 1$ \label{a1:imin1}
+        \Else
+            \State $i^{K+1} := i^K$ \label{a1:imin0}
+        \EndIf
+        \State $K := K + 1$
+        \State $V := V - u$
+    \EndWhile
+    \State The $e_1^K,\ldots,e_{n^K}^K$ are the elevation levels
+\end{algorithmic}
 
 \begin{proof}
 The proof consists of 4 parts. In part 1 we show that the algorithm is well-formed.
@@ -280,8 +286,7 @@ Furthermore, in line \ref{a1:imin0}, $i^{K+1} := i^K \le n^K - 1 = n^{K+1}$.
 
 This completes the proof by induction.
 
-\textbf{Part 2}: By induction over $K$ we show that the sequence $e_1^K,\ldots,e_{n^K}^K$ has a single local minimum, that no two adjacent $e_j^K$ are identical, and that $e_{i^K}^K$ is the local minimum of the sequence.
-Note that these conditions are equivalent to the statement that the monotonicity in the definition of \textit{single local minimum} is strict.
+\textbf{Part 2}: By induction over $K$ we show that the sequence $e_1^K,\ldots,e_{n^K}^K$ is fully merged and has a single local minimum, and that $e_{i^K}^K$ is the local minimum of the sequence.
 
 For $K=0$ it is clear.
 Assume that the condition holds for $K = \tilde{K}$ and that we have started the loop with $K$ set to this value.
@@ -306,14 +311,13 @@ This completes the proof by induction.
 Note that the algorithm is tail recursive.
 Therefore we can reformulate it as a recursive function.
 Instead of jumping back to the start of the loop, we can invoke the algorithm again with
-the sequence set to $e_1^K,\ldots,e_{n^K}^K$ and $T$ set to $T - u/(\sum_{j=1}^{n}w_j)$.
+the sequence set to $e_1^K,\ldots,e_{n^K}^K$ and $V$ set to $V - u$.
 Recall that we have just proved that this sequence is a valid input for the algorithm and that $e_{i^K}^K$ is the minimum that is being computed in line \ref{a1:minimum}.
 
 \textbf{Part 3}: We can now prove by induction over $n$ that the algorithm computes the water levels.
 
 Step 1: $n = 1$ or $V < u$ during the first iteration of the loop. Note that $n = 1$ implies $V < \infty = u$.
 
-Note that $V := T\sum_{j=1}^n w_i$ is the total amount of water that falls onto the terrain until $T$.
 Since the $e_i$ is the single local minimum of the sequence and since it is a strict minimum, all water will flow to $e_i$ until the negative volume below the adjacent segments is used up.
 The following image shows the negative volume of an example.
 \begin{center}
@@ -326,23 +330,22 @@ In line \ref{a1:vplus}, the algorithm increases the height of $e_i$ by $V/w_i$ w
 Step 2: Assume that the argument holds for all $\tilde{n} < n$.
 For $V < u$ we have already shown the result in step 1.
 Otherwise assume $V \ge u$.
-Let $u$ be as in the first iteration of the loop, $T_1 = u/(\sum_{j=1}^{n}w_j)$, and $T_2 = T - T_1 \ge 0$.
-We have shown above that invoking the algorithm with $T$ is the same as running the iteration once and then invoking the algorithm on the resulting sequence with $T = T_2$.
-Note that invoking the algorithm with $T_1$ runs the iteration once and then once more with $V = 0$.
+Let $u$ be as in the first iteration of the loop, $V_1 = u$, and $V_2 = V - V_1 \ge 0$.
+We have shown above that invoking the algorithm with $V$ is the same as running the iteration once and then invoking the algorithm on the resulting sequence with $V = V_2$.
+Note that invoking the algorithm with $V_1$ runs the iteration once and then once more with $V = 0$.
 However, this second iteration has no effect on the output of the algorithm.
-Therefore, invoking the algorithm with $T$ is indentical to invoking the algorithm once with $T = T_1$ and then with $T = T_2$ on the output of the first invocation.
-During the first iteration of the invocation with $T = T_1$, we have $V = u \ge u$ in line \ref{a1:vleu}.
+Therefore, invoking the algorithm with $V$ is indentical to invoking the algorithm once with $V = V_1$ and then with $V = V_2$ on the output of the first invocation.
+During the first iteration of the invocation with $V = V_1$, we have $V = u \ge u$ in line \ref{a1:vleu}.
 Therefore the algorithm outputs a new sequence with length $n^1 < n$.
 
-Note that during the invocation of the algorithm with $T = T_1$ we have $V = u$.
-By an argument identical to that in step 1, this invocation computes the water level after rain has fallen for $T_1$ hours.
-By our induction assumption (since $n^1 < n$), invoking the algorithm with $T = T_2$ on the output of the first invocation calculates the water level after $T_2$ hours of rain, taking into account the changes in elevation caused by the first $T_1$ hours of rain.
+Note that during the invocation of the algorithm with $V = V_1$ we have $V = u$.
+By an argument identical to that in step 1, this invocation computes the elevation level after pouring $V_1$ square units of water into the terrain.
+By our induction assumption (since $n^1 < n$), invoking the algorithm with $V = V_2$ on the output of the first invocation calculates the elevation levels after pouring $V_2$ square units of water into the terrain, taking into account the changes in elevation caused by the first $V_1$ square units of water.
 
-Since rain in the real world also composes, that is, rain for $T$ hours is the same as rain for $T_1$ hours and then $T_2$ hours (ignoring evaporation etc.), this completes the proof by induction.
+Since water in the real world also composes, that is, pouring $V$ square units is the same as pouring $V_1$ square units and then $V_2$ square units (ignoring evaporation etc.), this completes the proof by induction.
 
 \textbf{Part 4}: Lastly we show that the algorithm completes in $\bO(n)$ time.
 Computing $i$ in line \ref{a1:minimum} takes $\bO(n)$ time.
-Computing $V$ in line \ref{a1:compv} takes $\bO(n)$ time.
 Within the loop, performing the merge only touches the elements to the immediate left and right of the local minimum; therefore, assuming an implementation via linked lists, this operation takes $\bO(1)$ time.
 All other operations within the loop are clearly $\bO(1)$.
 Each iteration of the loop decreases the length of the sequence by at least $1$ and the loop terminates when the length is $1$.
@@ -397,7 +400,7 @@ Then $S_1$ consists of $(e_1,\ldots,e_{k_1,1})$.
 For $i\in\{2,\ldots,m\}$, $S_i$ consists of $(e_{k_{i-1},2},\ldots,e_{k_i,1})$.
 $S_{m+1}$ consists of $(e_{k_m,2},\ldots,e_n)$.
 
-If $S_i$ has no bounding maxima, then the \textsl{bounding height} $\mathcal{B}(S_i)$ of $S_i$ is $\infty$.
+If $S_i$ has no bounding maxima, then the \textit{bounding height} $\mathcal{B}(S_i)$ of $S_i$ is $\infty$.
 Otherwise, if $S_i$ has a single bounding maximum $e_l$, then $\mathcal{B}(S_i)$ is $e_l$.
 Otherwise $S_i$ has a two bounding maxima $e_l$ and $e_r$ and $\mathcal{B}(S_i)$ is $\min(e_l, e_r)$.
 
@@ -417,22 +420,151 @@ Otherwise, if $e_l\in\mathcal{C}(S_i)$, we say that $S_i$ overflows on the left.
 Otherwise we say that $S_i$ overflows on the right.
 
 For each segment $e\in\mathcal{E}(S_i)$, let $\mathcal{W}(e)$ be the corresponding width.
-We define the capacity $\capp(S_i)$ of a sink as follows
+We define the \textit{capacity} $\capp(S_i)$ of a sink as follows:
 \begin{align*}
     \capp(S_i) = \sum_{e\in\mathcal{C}(S_i)} \mathcal{W}(e)(\mathcal{B}(S_i)-e).
 \end{align*}
 Note that $\capp(S_i)$ is the volume of water $S_i$ can hold before it overflows.
 
-We define a total order on the sinks $S_i$ by the lexicographic order on the tuples $(\capp(S_i), i)$.
-That is, sinks with a lower capacity come first.
-If two sinks have the same capacity, the sink with the smaller index comes first.
+We define the \textit{width} $\mathcal{W}(S_i)$ of $S_i$ by
+\begin{align*}
+    \mathcal{W}(S_i) = \sum_{e\in\mathcal{E}(S_i)} \mathcal{W}(e).
+\end{align*}
+We define the \textit{capacity width} $\mathcal{W}_c(S_i)$ of $S_i$ by
+\begin{align*}
+    \mathcal{W}_c(S_i) = \sum_{e\in\mathcal{C}(S_i)} \mathcal{W}(e).
+\end{align*}
+
+At certain points in the algorithm, we compute for a sink $S_i$ how much water is currently in the sink.
+At these points we store the time since it has started raining and the computed value.
+We call these values $\filltime(S_i)$ and $\Fill(S_i)$ respectively.
+Initially both values are $0$.
+
+For each sink $S_i$, we calculate the time (in hours) at which it will overflow, $\ot(S_i)$, as follows:
+\begin{align*}
+    \ot(S_i) = \frac{\capp(S_i) - \Fill(S_i)}{\mathcal{W}(S_i)} + \filltime(S_i).
+\end{align*}
+It is clear that if a sink has capacity $\capp(S_i)$ of which $\Fill(S_i)$ is already used, then the remaining capacity for additional water is $\capp(S_i) - \Fill(S_i)$.
+Since the sink receives $\mathcal{W}(S_i)$ square units of water per hour, this additional capacity is used up after $\frac{(\capp(S_i) - \Fill(S_i))}{\mathcal{W}(S_i)}$.
+Since this additional rain occurs after the time $\filltime(S_i)$, we have to add $\filltime(S_i)$ to get the absolute time value.
+
+We define a total order on the sinks $S_i$ by the lexicographic order on the tuples $(\ot(S_i), i)$.
+That is, sinks that overflow earlier come first.
+If two sinks overflow at the same time, the sink with the smaller index comes first.
 
 In our algorithm, we will maintain a priority queue containing all sinks.
 Popping an element from this queue always returns the sink that comes first in the order defined above.
-That is, it always returns the sink with the smallest capacity.
+That is, it always returns the sink that overflows next.
 
 Some of the properties above require more than $\bO(1)$ time to be computed.
 In these cases, we will assume that the propertise are calculated once and then cached.
 When merging two sinks we will re-calculate the cached values.
+
+In our algorithm, we we will maintain doubly-linked lists of elevation segments and sinks.
+Both of these lists contain their elements from left to right in the terrain.
+When we say that we remove one or more elevation segments or sinks, we mean removing them from these linked lists.
+
+\begin{thm}
+    Let $n\in\Np$, $T\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence.
+    Then the following algorithm calculates the water levels at time $T$ in $\bO(n\log(n))$ time.
+\end{thm}
+
+\vspace{1em}
+
+\begin{algorithmic}[1]
+    \State Let $(S_i)_i$ be the sinks of $(e_1,\ldots,e_n)$
+    \State Let $B$ be a priority queue containing the sinks as described above
+    \State $c := 0$
+    \While{true} \label{a2:while}
+        \State Pop a sink $S$ from $B$
+        \If{$\ot(S)\ge T$}
+            \State break
+        \EndIf
+        \State $c := \ot(S)$
+        \If{$S$ overflows on both sides}
+            \State Let $S_l$ be the sink to the left of $S$
+            \State Let $S_r$ be the sink to the right of $S$
+            \State $\Fill(S_l) := \Fill(S_l) + (c - \filltime(S_l))\mathcal{W}(S_l)$
+            \State $\Fill(S_r) := \Fill(S_r) + (c - \filltime(S_r))\mathcal{W}(S_r)$
+            \State $\filltime(S_l) := c$
+            \State $\filltime(S_r) := c$
+            \State Let $e_r$ be the rightmost segment in $S_l$
+            \State Let $e_l$ be the leftmost segment in $S_r$
+            \State Remove all segments between $e_r$ and $e_l$
+            \State $w := \mathcal{W}(e_r) + \mathcal{W}(e_l) +\mathcal{W}(S)$
+            \State $d_r := w/2 - \mathcal{W}(e_r)$
+            \State $d_l := w/2 - \mathcal{W}(e_l)$
+            \State $\mathcal{W}(e_r) := \mathcal{W}(e_r) + d_r$
+            \State $\mathcal{W}(e_l) := \mathcal{W}(e_l) + d_l$
+            \State $\mathcal{W}(S_l) := \mathcal{W}(S_l) + d_r$
+            \State $\mathcal{W}(S_r) := \mathcal{W}(S_r) + d_l$
+            \If{$\mathcal{C}(S_l)$ ends in $e_r$}
+              \State $\mathcal{W}_c(S_l) := \mathcal{W}_c(S_l) + d_r$
+            \EndIf
+            \If{$\mathcal{C}(S_r)$ ends in $e_l$}
+              \State $\mathcal{W}_c(S_r) := \mathcal{W}_c(S_r) + d_l$
+            \EndIf
+            \State Remove $S$.
+            \State Recalculate $\ot(S_l)$
+            \State Recalculate $\ot(S_r)$
+        \Else
+            \If{$S$ overflows on the left}
+              \State Let $S_m$ be the sink to the left of $S$
+            \Else
+              \State Let $S_m$ be the sink to the right of $S$
+            \EndIf
+            \State $\Fill(S_m) := \Fill(S_m) + (c - \filltime(S_m))\mathcal{W}(S_m)$
+            \State $\filltime(S_m) := c$
+            \State Remove the elements of $\mathcal{C}(S)$
+            \State Extend $\mathcal{E}(S_m)$ to contain $\mathcal{E}(S)$
+            \State $\mathcal{W}(S_m) := \mathcal{W}(S_m) + \mathcal{W}(S)$
+            \If{$S$ overflows on the left}
+              \State Let $e_r$ be the rightmost segment in $S_m$
+              \State $\mathcal{W}(e_r) := \mathcal{W}(e_r) + \mathcal{W}_c(S)$
+              \If{$\mathcal{C}(S_m)$ ends in $e_r$}
+                \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}_c(S)$
+              \EndIf
+            \Else
+              \State Let $e_l$ be the leftmost segment in $S_m$
+              \State $\mathcal{W}(e_l) := \mathcal{W}(e_l) + \mathcal{W}_c(S)$
+              \If{$\mathcal{C}(S_m)$ ends in $e_l$}
+                \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}_c(S)$
+              \EndIf
+            \EndIf
+            \State $b := \mathcal{B}(S_m)$
+            \State Recalculate $\mathcal{B}(S_m)$
+            \If{$\mathcal{B}(S_m) > b$}
+              \State $\capp(S_m) := \capp(S_m) + \mathcal{W}_c(S_m)(\mathcal{B}(S_m) - b)$
+              \While{true}
+                \State Let $e$ be the first segment to the left of $\mathcal{C}(S_m)$
+                \If{$e > \mathcal{B}(S_m)$ or $e$ is outside of $\mathcal{E}(S_m)$}
+                    \State break
+                \EndIf
+                \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}(e)$
+                \State $\capp(S_m) := \capp(S_m) + \mathcal{W}(e)(\mathcal{B}(S_m) - e)$
+                \State Extend $\mathcal{C}(S_m)$ to contain $e$
+              \EndWhile
+              \While{true}
+                \State Let $e$ be the first segment to the right of $\mathcal{C}(S_m)$
+                \If{$e > \mathcal{B}(S_m)$ or $e$ is outside of $\mathcal{E}(S_m)$}
+                    \State break
+                \EndIf
+                \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}(e)$
+                \State $\capp(S_m) := \capp(S_m) + \mathcal{W}(e)(\mathcal{B}(S_m) - e)$
+                \State Extend $\mathcal{C}(S_m)$ to contain $e$
+              \EndWhile
+            \EndIf
+            \State Remove $S$.
+            \State Recalculate $\ot(S_m)$
+        \EndIf
+    \EndWhile
+    \For{each sink $S$ in the linked list}
+      \State $\Fill(S_l) := \Fill(S_l) + (T - \filltime(S_l))\mathcal{W}(S_l)$
+      \State Detach $\mathcal{E}(S)$ from the rest of the linked list
+      \State Apply the algorithm from Lemma \ref{alg1} to $\mathcal{E}(S)$ with $V = \Fill(S_l)$
+      \State Insert the output into the linked list in the place where we just detached $\mathcal{E}(S)$
+    \EndFor
+    \State The linked list of segments are the desired elevation levels.
+\end{algorithmic}
 
 \end{document}

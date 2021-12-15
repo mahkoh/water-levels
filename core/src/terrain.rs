@@ -356,52 +356,51 @@ impl Terrain {
             if next > mid {
                 right_elevation = sgm![next].elevation;
             }
-            while sink.fill > 0.0 {
+            loop {
                 let wall_height = left_elevation.min(right_elevation);
-                let capacity = (wall_height - sgm![mid].elevation) * (sgm![mid].width());
-                let used = capacity.min(sink.fill);
-                if used == capacity {
-                    if left_elevation < right_elevation {
-                        sgm![prev].width_times_2 += sgm![mid].width_times_2;
-                        sgm![prev].next = sgm![mid].next;
-                        mid = prev;
-                    } else if left_elevation > right_elevation {
-                        sgm![next].width_times_2 += sgm![mid].width_times_2;
-                        sgm![next].prev = sgm![mid].prev;
-                        if Some(mid) == first_seg {
-                            first_seg = Some(next);
-                        }
-                        mid = next;
-                    } else {
-                        sgm![prev].width_times_2 +=
-                            sgm![mid].width_times_2 + sgm![next].width_times_2;
-                        sgm![prev].next = sgm![next].next;
-                        mid = prev;
-                    }
-                    prev = sgm![mid].prev.unwrap_or(mid);
-                    next = sgm![mid].next.unwrap_or(mid);
-                    if prev < sink.segments.start {
-                        prev = mid;
-                    }
-                    if next >= sink.segments.end {
-                        next = mid;
-                    }
-                    if next > mid {
-                        sgm![next].prev = Some(mid);
-                        right_elevation = sgm![next].elevation;
-                    } else {
-                        right_elevation = f64::INFINITY;
-                    }
-                    if prev < mid {
-                        sgm![prev].next = Some(mid);
-                        left_elevation = sgm![prev].elevation;
-                    } else {
-                        left_elevation = f64::INFINITY;
-                    }
-                } else {
-                    sgm![mid].elevation += used / sgm![mid].width();
+                let capacity = (wall_height - sgm![mid].elevation) * sgm![mid].width();
+                if sink.fill < capacity {
+                    sgm![mid].elevation += sink.fill / sgm![mid].width();
+                    break;
                 }
-                sink.fill -= used;
+                if left_elevation < right_elevation {
+                    sgm![prev].width_times_2 += sgm![mid].width_times_2;
+                    sgm![prev].next = sgm![mid].next;
+                    mid = prev;
+                } else if left_elevation > right_elevation {
+                    sgm![next].width_times_2 += sgm![mid].width_times_2;
+                    sgm![next].prev = sgm![mid].prev;
+                    if Some(mid) == first_seg {
+                        first_seg = Some(next);
+                    }
+                    mid = next;
+                } else {
+                    sgm![prev].width_times_2 +=
+                        sgm![mid].width_times_2 + sgm![next].width_times_2;
+                    sgm![prev].next = sgm![next].next;
+                    mid = prev;
+                }
+                prev = sgm![mid].prev.unwrap_or(mid);
+                next = sgm![mid].next.unwrap_or(mid);
+                if prev < sink.segments.start {
+                    prev = mid;
+                }
+                if next >= sink.segments.end {
+                    next = mid;
+                }
+                if next > mid {
+                    sgm![next].prev = Some(mid);
+                    right_elevation = sgm![next].elevation;
+                } else {
+                    right_elevation = f64::INFINITY;
+                }
+                if prev < mid {
+                    sgm![prev].next = Some(mid);
+                    left_elevation = sgm![prev].elevation;
+                } else {
+                    left_elevation = f64::INFINITY;
+                }
+                sink.fill -= capacity;
             }
         }
         let mut cur = first_seg.unwrap();
