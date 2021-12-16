@@ -334,6 +334,7 @@ impl Terrain {
                 first_seg = Some(sink.segments.start);
             }
             sink.fill += (target - sink.fill_units) * sink.width();
+            dbg!(&sink);
             let mut mid = sink.segments.start;
             let mut prev = mid;
             let mut next = mid;
@@ -357,6 +358,12 @@ impl Terrain {
                 right_elevation = sgm![next].elevation;
             }
             loop {
+                dbg!(prev);
+                dbg!(mid);
+                dbg!(next);
+                dbg!(left_elevation);
+                dbg!(sgm![mid].elevation);
+                dbg!(right_elevation);
                 let wall_height = left_elevation.min(right_elevation);
                 let capacity = (wall_height - sgm![mid].elevation) * sgm![mid].width();
                 if sink.fill < capacity {
