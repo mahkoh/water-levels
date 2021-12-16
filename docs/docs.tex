@@ -576,7 +576,7 @@ When we say that we remove one or more elevation segments or sinks, we mean remo
         \EndIf
     \EndWhile
     \For{each sink $S$ in the linked list}
-      \State $\Fill(S) := \Fill(S) + (T - \filltime(S))\mathcal{W}(S)$
+      \State $\Fill(S) := \Fill(S) + (T - \filltime(S))\mathcal{W}(S)$ \label{a2:lastfill}
       \State Detach $\mathcal{E}(S)$ from the rest of the linked list
       \State Apply the algorithm from Lemma \ref{alg1} to $\mathcal{E}(S)$ with $V = \Fill(S)$
       \State Insert the output into the linked list in the place where we just detached $\mathcal{E}(S)$
@@ -603,10 +603,14 @@ We show by induction that the following properties hold for all sinks $S$ in the
 \item The sequence of values $\ot(S)$ of the sinks $S$ popped in line \ref{a2:firstline} never decreases.\label{e15}
 \item $\Fill(S) \le \capp(S)$.\label{e16}
 \item $\sum_S\left(\norm{\mathcal{E}(S)} - \norm{\mathcal{C}(S)}\right)$ (where $S$ ranges over all $S$ in the linked list) does not increase during this iteration and decreases by $1$ for each time to algorithm reaches line \ref{a2:dec1} or \ref{a2:dec2}.\label{e17}
+\item Applying the algorithm from lemma \ref{alg1} to $\mathcal{E}(S)$ detached from all other sinks with $V=\Fill(S)$ computes the elevation levels of the sink at time $\filltime(S)$.\label{e18}
 \end{enumerate}
 
 Throughout the proof, we will use the prime symbol $'$ to refer to the values of properties as they were at the start of the iteration before any modifications.
 For example, $\mathcal{W}(S')$.
+
+Note: During the proof we make gratuitous use of the following physical property:
+Due to \ref{e4}, water that falls onto a sink always flows towards the sink and never outside the sink.
 
 \textbf{Induction start}: Assume that we have reached line \ref{a2:firstline} for the first time.
 Then none of the $S$ or their properties have been modified after construction.
@@ -663,6 +667,8 @@ Therefore \ref{e13} holds.
 There is nothing to show for \ref{e15} and \ref{e17}.
 
 Since $\Fill(S) = 0 \le \capp(S)$, \ref{e16} holds.
+
+Since $\Fill(S) = \filltime(S) = 0$, \ref{e18} holds.
 
 \textbf{Induction step}: Assume that we have reached line \ref{a2:firstline} and that the properties hold.
 We show that the properties continue to hold at the start of the next iteration.
@@ -755,6 +761,50 @@ Since we have removed exactly $S$ from $B$ and since we have removed exactly $S$
 
 Since we removed $S$ from the linked list and did not modify the number of elements in $\mathcal{E}(S_*)$ or $\mathcal{C}(S_*)$ for any other $S_*$, \ref{e17} holds.
 
+For each $S_*$ in the list, between $\filltime(S_*')$ and $\ot(S)$, 
+\begin{align*}
+    (\ot(S) - \filltime(S_*'))\mathcal{W}(S_*')
+        &= (\ot(S) - \ot(S_*'))\mathcal{W}(S_*') + (\ot(S_*') - \filltime(S_*'))\mathcal{W}(S_*') \\
+        &= (\ot(S) - \ot(S_*'))\mathcal{W}(S_*') + \capp(S_*') - \Fill(S_*')
+\end{align*}
+square units of water fall directly on top of $S_*$.
+Recall that
+\begin{align*}
+    \capp(S_*') = \sum_{e\in\mathcal{C}(S_*')} \mathcal{W}(e)(\mathcal{B}(S_*')-e).
+\end{align*}
+is the amount of water that $S_*$ can hold before it overflows.
+Since $\Fill(S_*')\le\capp(S_*')$, $S_*$ does not overflow by filling it with $\Fill(S_*')$ square units of water.
+By \ref{e18}, applying the algorithm from lemma \ref{alg1} to $S_*$ with $V=\Fill(S_*')$ yields the elevation levels at time $\filltime(S_*')$.
+By lemma \ref{compose}, applying the algorithm with $V=\Fill(S_*')$ and then with $V=(\ot(S) - \filltime(S_*'))\mathcal{W}(S_*')$ is the same as applying it once with $V=(\ot(S) - \ot(S_*'))\mathcal{W}(S_*') + \capp(S_*')$.
+Since the first summand is non-positive, we see that no $S_*$ overflows between $\filltime(S_*')$ and $\ot(S)$.
+
+Note that as long as no sink overflows, there is a bijection between the volume of water in a sink and the time at which this volume has fallen into the sink.
+
+For $S_* = S$, we see that at time $\ot(S)$ it is filled with $\capp(S)$ square units of water.
+Therefore the elevation levels of all $e\in\mathcal{C}(S)$ become $\mathcal{B}(S)$.
+
+We now show that \ref{e18} continues to hold for $S_l$ and $S_r$.
+By the discussion above, we know that the amount of water in $S_l'$ at time $\filltime(S) = \ot(S)$ is
+\begin{align*}
+    &(\ot(S) - \ot(S_l'))\mathcal{W}(S_l') + \capp(S_l') \\
+  = &\left(\ot(S) - \frac{\capp(S_l') - \Fill(S_l')}{\mathcal{W}(S_l')} - \filltime(S_l)\right)\mathcal{W}(S_l') + \capp(S_l') \\
+  = &\left(\ot(S) - \filltime(S_l)\right)\mathcal{W}(S_l') + \Fill(S_l') \\
+  = &\Fill(S).
+\end{align*}
+And therefore $\Fill(S)\le\capp(S_l')$.
+Therefore applying the algorithm from lemma \ref{alg1} to the original $S_l'$ with volume $\Fill(S)$ yields the elevation levels at time $\filltime(S_l)$.
+
+Recall that $e_r\le\mathcal{B}_r(S_l')$.
+Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is the algorithm from lemma \ref{alg1} returns the segment $e_r$ unchanged.
+Therefore extending the segment $e_r$ has no effect on the output of the algorithm.
+
+Therefore applying the algorithm to $S_l$ returns the correct levels in the area previously covered by $S_l'$.
+Recall that in the area to the right of $S_l$ that was previously covered by $S$, the elevation levels have risen to be exactly $e_r$.
+Therefore the algorithm returns the correct levels everywhere.
+
+A similar discussion applies to $S_r$.
+Therefore \ref{e18} holds.
+
 \textbf{Case 2}: $\mathcal{B}_l(S) < \mathcal{B}_r(S)$ in line \ref{a2:bllessbr}.
 
 Since $\mathcal{B}_l(S) < \infty$, there is a sink to the left of $S$ and the operation in
@@ -845,11 +895,43 @@ In line \ref{a2:recalotsm} we set $\ot(S_m)$ to the correct value.
 
 Therefore \ref{e1} holds.
 
+We now show that \ref{e18} continues to hold for $S_m$.
+Recall from the previous case that the amount of water in $S_m'$ at time $\filltime(S) = \ot(S)$ is $\Fill(S)$ and that $\Fill(S)\le\capp(S_m')$.
+Therefore applying the algorithm from lemma \ref{alg1} to the original $S_m'$ with volume $\Fill(S)$ yields the elevation levels at time $\filltime(S_m)$.
+
+Recall that $e_r\le\mathcal{B}_r(S_m')$.
+Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is the algorithm from lemma \ref{alg1} returns the segment $e_r$ unchanged.
+Therefore extending the segment $e_r$ has no effect on the output of the algorithm.
+
+Therefore applying the algorithm to $S_m$ returns the correct levels in the area previously covered by $S_m'$.
+Recall by the discussion from the previous case that in the area to the right of $S_m$ that was previously covered by $\mathcal{C}(S)$, the elevation levels have risen to be exactly $e_r$.
+Therefore the algorithm returns the correct levels in the area previously covered by $\mathcal{C}(S)$.
+
+Note that the elevation level in $\mathcal{E}(S)\setminus\mathcal{C}(S)$ were left unchanged by the rain falling on $S$ and that these levels are all above $e_r$.
+Therefore, since $S_l$ contains these segments unchanged, the algorithm returns the correct levels everywhere.
+
+Therefore \ref{e18} holds.
+
 \textbf{Case 3}: $\mathcal{B}_l(S) > \mathcal{B}_r(S)$ in line \ref{a2:bllessbr}.
 
 This is identical to the previous case.
 
 This completes the proof by induction.
+
+\textbf{Part 2}: We now show that the algorithm computes the correct elevation levels.
+
+Note that after the first loop ends, \ref{e18} continues to hold.
+As in case 1 above, we see that the amount of water in $S$ at time $T$ is
+\begin{align*}
+    &(T - \ot(S))\mathcal{W}(S) + \capp(S) \\
+  = &\left(T - \frac{\capp(S) - \Fill(S)}{\mathcal{W}(S)} - \filltime(S)\right)\mathcal{W}(S) + \capp(S) \\
+  = &\left(T - \filltime(S)\right)\mathcal{W}(S) + \Fill(S).
+\end{align*}
+Note that this is the value that we assign to $\Fill(S)$ in line \ref{a2:lastfill}.
+In particular, $\Fill(S)\le\capp(S)$.
+By the discussion in case 1 above, applying the algorithm from lemma \ref{alg1} to $S$ with $V=\Fill(S)$ yields the elevation levels at time $T$ for the part of the terrain that is covered by $\mathcal{E}(S)$.
+By \ref{e2}, $\mathcal{E}(S)$ are a partition of the terrain.
+Therefore the algorithm calculates the levels for the entire terrain.
 
 \textbf{Part 3}: We show that the algorithm runs in $\bO(n\log(n))$.
 
@@ -867,8 +949,6 @@ Therefore the outer loop runs in $\bO(n\log(n))$.
 
 In the second loop, applying the algorithm from lemma \ref{alg1} takes $\bO(\norm{\mathcal{E}(S)})$ time.
 Since $\sum_S\norm{\mathcal{E}(S)}\le 2n$, all applications combined run in $\bO(n)$ time.
-
-
 \end{proof}
 
 \end{document}
