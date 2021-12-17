@@ -3,14 +3,27 @@ import * as d3 from "d3";
 
 document.querySelector("#commit").innerText = wasm.commit();
 
+let hours = 4;
+
 let level_el = document.querySelector("#level");
-level_el.addEventListener("input", calculate);
+level_el.addEventListener("input", () => {
+    hours_el.value = level_el.value;
+    hours = level_el.value;
+    calculate();
+});
 
 let hours_el = document.querySelector("#hours");
 hours_el.addEventListener("input", () => {
+    if (hours_el.value < 0) {
+        hours_el.value = 0;
+    }
     level_el.value = hours_el.value;
+    hours = hours_el.value;
     calculate();
 })
+
+hours_el.value = hours;
+level_el.value = hours;
 
 let add_el = document.querySelector(".add");
 let graph_el = document.querySelector("#graph");
@@ -19,9 +32,7 @@ function calculate() {
     const WIDTH = 50;
     let elevations = [];
     document.querySelectorAll(".elevation").forEach((el) => elevations.push(el.value));
-    let level = level_el.value;
-    hours_el.value = level;
-    let res = wasm.calculate(elevations, level);
+    let res = wasm.calculate(elevations, hours);
     graph_el.innerHTML = "";
     let results = document.querySelectorAll(".result");
     results.forEach(el => el.innerHTML = "");
@@ -60,10 +71,17 @@ function remove(el) {
     calculate();
 }
 
+function update(ev) {
+    if (ev.target.value < 0) {
+        ev.target.value = 0;
+    }
+    calculate();
+}
+
 for (let button of document.querySelectorAll(".remove")) {
     button.addEventListener("click", remove);
 }
-document.querySelectorAll(".elevation").forEach((el) => el.addEventListener("change", calculate));
+document.querySelectorAll(".elevation").forEach((el) => el.addEventListener("input", update));
 
 function add_elevation(val) {
     let li = add_el.parentElement;
@@ -74,11 +92,11 @@ function add_elevation(val) {
         Result: <span class="result"></span>
     `;
     new_.querySelector("button").addEventListener("click", remove);
-    new_.querySelector("input").addEventListener("change", calculate);
+    new_.querySelector("input").addEventListener("input", update);
     li.parentElement.insertBefore(new_, li);
 }
 
-add_el.addEventListener("click", (el) => {
+add_el.addEventListener("click", () => {
     add_elevation(0);
     calculate();
 })

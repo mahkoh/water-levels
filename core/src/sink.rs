@@ -33,8 +33,10 @@ impl PartialOrd<Self> for SinkRef {
 
 impl Ord for SinkRef {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.overflow_unit
-            .partial_cmp(&other.overflow_unit)
+        // NOTE: BinaryHeap is a max-heap, that is, it always returns the largest element.
+        // Therefore we have to call `reverse` at the end.
+        self.overflow_time
+            .partial_cmp(&other.overflow_time)
             .unwrap()
             .then_with(|| self.pos.cmp(&other.pos))
             .then_with(|| self.ver.cmp(&other.ver))

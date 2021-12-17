@@ -961,7 +961,9 @@ Constructing $B$ can be performed in $\bO(n\log(n))$.
 Since we remove one element from $B$ per iteration of the outer loop and since we never add any elements to $B$, the outer loop runs at most $2n$ times.
 Furthermore, since $\sum_S\left(\norm{\E(S)} - \norm{\C(S)}\right) \le 2n$, by \ref{e17}, the inner loops between lines \ref{a2:walkstart} to \ref{a2:walkstop} iterate at most a total of $2n$ times over the entire runtime of the algorithm.
 Therefore we visit each line in the algorithm at most $2n$ times.
-Every operation within the outer loop is $\bO(1)$ except that popping an element from $B$ is $\bO(\log(n))$.
+Popping an element from $B$ takes $\bO(\log(n))$ time.
+Modifying the $\ot(S_l)$, $\ot(S_r)$, and $\ot(S_m)$ takes $\bO(\log(n))$ time since we have to maintain the heap property of $B$.
+Every other operation within the outer loop is $\bO(1)$.
 Therefore the outer loop runs in $\bO(n\log(n))$.
 
 In the second loop, applying the SLM algorithm takes $\bO(\norm{\E(S)})$ time.
