@@ -29,14 +29,14 @@ pub fn elevation_levels(levels: &[f64], hours: f64) -> Result<Vec<f64>> {
 //
 // Instead, we simulate the doubly-linked lists as follows: After initially constructing
 // the sinks, we store the sinks and the segments in two vectors. Each sink and segment
-// contains a field that contains its index in the vector. Furthermore, the contain the
+// contains a field that contains its index in the vector. Furthermore, they contain the
 // indices of the elements that come immediately before/after them (if any).
 //
 // Therefore, we can remove elements from the linked lists by manipulating the fields
 // containing the indices of the neighboring elements.
 //
 // For the priority queue, we use a `BinaryHeap`. For each `Sink` in the doubly-linked
-// list. We store a `SinkRef` in the heap. This object references the `Sink` by storing
+// list, we store a `SinkRef` in the heap. This object references the `Sink` by storing
 // its index. It also contains the overflow time, `\ot(S)`, so that it can be correctly
 // sorted within the heap.
 //
