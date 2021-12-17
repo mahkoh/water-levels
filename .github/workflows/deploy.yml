@@ -22,6 +22,7 @@ jobs:
     - name: Build wasm
       run: |
         cd wasm
+        export GIT_COMMIT=$(git rev-parse --short HEAD)
         wasm-pack build
     - name: Build site
       run: |
