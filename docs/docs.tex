@@ -15,6 +15,7 @@
 \newtheorem{defi}{Definition}
 \newtheorem{ex}{Example}
 \newtheorem{nota}{Notation}
+\newtheorem{cor}{Corollary}
 
 \newcommand{\inv}[1]{\frac{1}{#1}}
 \newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
@@ -45,7 +46,7 @@
   \end{itemize}
 \end{nota}
 
-Let $n\in\Np$ and let  $(e_1, \ldots, e_n) \in \Rp^n$ be a finite sequence describing the elevation levels of a terrain.
+Let $n\in\Np$ and let  $(e_1, \ldots, e_n) \in \Rnn^n$ be a finite sequence describing the elevation levels of a terrain.
 Assume that each $e_i$ describes a segment with a width of $1$ unit.
 
 Assume that it is raining and that each segment receives $1$ square unit of water per hour.
@@ -62,8 +63,17 @@ The task is to find an algorithm that outputs the elevation of each segment afte
   \end{center}
 \end{ex}
 
+Our main result is
+
+\begin{cor}
+\label{mainresult}
+There is an algorithm that computes the elevation levels in $\bO(n\log(n))$ time.
+\end{cor}
+
+We will prove this at the very end of this paper.
+
 In the following we will no longer assume that each $e_i$ describes a segment with a width of $1$ unit.
-Instead, let $w_1,\ldots,w_n \in \Rp$ with $w_i > 0$ be a sequence describing the width of the segments.
+Instead, let $(w_1,\ldots,w_n) \in \Rp^n$ be a sequence describing the width of the segments.
 The original problem can then be solved by setting $w_i = 1$.
 
 \begin{defi}
@@ -117,6 +127,7 @@ By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\h
 \end{proof}
 
 \begin{lem}
+\label{retrieval}
   Let $n,m\in\Np$, $m < n$, and let $(e_1,\ldots,e_n), (\hat{e}_1,\ldots,\hat{e}_m)$ be equivalent elevation sequences. Let
   \begin{align*}
       x \in \left[0, \sum_{i=1}^n w_i\right)
@@ -161,21 +172,9 @@ By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\h
 
     The case where there is more than one splitting step now follows immediately by induction.
 
-    For the $x_1,\ldots,x_l$, we can first assume that they are sorted in ascending order by applying a sorting algorithm in $l\log(l)$ time.
+    For the $x_1,\ldots,x_l$, we can first assume that they are sorted in ascending order by applying a sorting algorithm in $\bO(l\log(l))$ time.
     Then we iterate over the $x_i$ and apply the algorithm above except that, since the $x_i$ are sorted, we do not have to restart the summation for each $x_i$.
-    Hence, this iteration completes in $\bO(max(l, n))$ time.
-\end{proof}
-
-\begin{lem}
-  Let $n\in\Np$, $T\in\Rnn$, and let $(e_1,\ldots,e_n)$ be an elevation sequence with widths $1$.
-  Assume that we have an algorithm that produces the elevation of the terrain after $T$ hours of rain in form of an elevation sequence with $m \le 2n$ segments in $\bO(n\log(n))$ time.
-  Then we can determine the solution to the original problem in $\bO(n\log(n))$ time.
-\end{lem}
-
-\begin{proof}
-  Let $(x_1,\ldots,x_n) = (0,\ldots,n-1)$.
-  By applying the algorithm from the previous lemma to the output of the algorithm from this lemma,
-  we determine the elevation levels at the points $x_i$ in $\bO(\max(n\log(n), 2n)) = \bO(n\log(n))$ time.
+    Hence, this iteration completes in $\bO(\max(l, n))$ time.
 \end{proof}
 
 \begin{lem}
@@ -191,10 +190,10 @@ By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\h
 \begin{proof}
   $\Rightarrow$: Assume that $(e_1,\ldots,e_n)$ has a single local minimum $e_i$.
   For $i \le j < k$, $e_j \le e_k$, therefore $e_j$ is not a local maximum.
-  For $k > j \ge i$, $e_k \ge e_j$, therefore $e_j$ is not a local maximum.
+  For $k < j \le i$, $e_k \ge e_j$, therefore $e_j$ is not a local maximum.
 
   $\Leftarrow$: Assume that $(e_1,\ldots,e_n)$ has no local maxima.
-  Let $i$ such that $e_i = \min(e_1,\ldots,e_n)$.
+  Let $i$ be such that $e_i = \min(e_1,\ldots,e_n)$.
   We show by induction over $j \in \{i,\ldots,n-1\}$ that $e_j < e_{j+1}$.
   For $j = i$ it follows by the definition of $i$ and the fact that the sequence is fully merged.
   Assume that the statement holds for $j-1$, that is, $e_{j-1} < e_j$.
@@ -203,9 +202,10 @@ By merging we mean replacing $e_i, e_{i+1}$ with $e_i = e_{i+1}$ in place by $\h
   By an identical induction, we see that $e_{j-1} > e_j$ for $j \in \{2,\ldots,i\}$.
 \end{proof}
 
-In the first step, we will look at the case where the terrain has a single local minimum.
+Next we will describe an algorithm that solves the problem for a terrain with a single local minimum.
+We will call this algorithm the \textit{SLM algorithm}.
 
-\begin{lem}
+\begin{lem}[SLM Algorithm]
     \label{alg1}
     Let $n\in\Np$, $V\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence with a single local minimum.
     The following algorithm calculates the elevation levels after pouring $V$ square units of water into the terrain.
@@ -242,7 +242,7 @@ In the first step, we will look at the case where the terrain has a single local
             \State $n^{K+1} := n^K - 1$ \label{a1:min1}
         \EndIf
         \State Merge $e_{i^K}^K$ with the surrounding segments if possible \label{a1:merge}
-        \State Call the resulting sequence $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $w_1^{K+1},\ldots,w_{n^{K+1}}^{K+1}$
+        \State Call the resulting sequences $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $w_1^{K+1},\ldots,w_{n^{K+1}}^{K+1}$
         \If{$l \le r$} \label{a1:ller}
             \State $i^{K+1} := i^K - 1$ \label{a1:imin1}
         \Else
@@ -313,8 +313,8 @@ This completes the proof by induction.
 Note that the algorithm is tail recursive.
 Therefore we can reformulate it as a recursive function.
 Instead of jumping back to the start of the loop, we can invoke the algorithm again with
-the sequence set to $e_1^K,\ldots,e_{n^K}^K$ and $V$ set to $V - u$.
-Recall that we have just proved that this sequence is a valid input for the algorithm and that $e_{i^K}^K$ is the minimum that is being computed in line \ref{a1:minimum}.
+the sequence set to $e_1^{K+1},\ldots,e_{n^{K+1}}^{K+1}$ and $V$ set to $V - u$.
+Recall that we have just proved that this sequence is a valid input for the algorithm and that $e_{i^{K+1}}^{K+1}$ is the minimum that is being computed in line \ref{a1:minimum}.
 
 \textbf{Part 3}: We can now prove by induction over $n$ that the algorithm computes the elevation levels.
 
@@ -335,7 +335,8 @@ Otherwise assume $V \ge u$.
 Let $u$ be as in the first iteration of the loop, $V_1 = u$, and $V_2 = V - V_1 \ge 0$.
 We have shown above that invoking the algorithm with $V$ is the same as running the iteration once and then invoking the algorithm on the resulting sequence with $V = V_2$.
 Note that invoking the algorithm with $V_1$ runs the iteration once and then once more with $V = 0$.
-However, this second iteration has no effect on the output of the algorithm.
+Since the sequence is fully merged, we know that $u > 0$; therefore we break out of the loop in the second iteration.
+However, the second iteration has no effect on the output of the algorithm.
 Therefore, invoking the algorithm with $V$ is indentical to invoking the algorithm once with $V = V_1$ and then with $V = V_2$ on the output of the first invocation.
 During the first iteration of the invocation with $V = V_1$, we have $V = u \ge u$ in line \ref{a1:vleu}.
 Therefore the algorithm outputs a new sequence with length $n^1 < n$.
@@ -363,7 +364,7 @@ This completes the proof.
 \end{lem}
 
 \begin{proof}
-  Since the algorithm computes the effects of a natural process and since this natural process decomposes, the algorithm also decomposes.
+  Since the algorithm computes the effects of a physical process and since this physical process decomposes, the algorithm also decomposes.
 \end{proof}
 
 We can now solve the general problem using the following ansatz.
@@ -400,7 +401,7 @@ In this case the overflowing sink is filled up, split in half, and divided equal
   \includegraphics{im14.pdf}
 \end{center}
 
-We will now define the sinks of an elevation sequence and its properties.
+We will now define the sinks of an elevation sequence and their properties.
 
 Let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence and let $k_1,\ldots,k_m \in \{2,\ldots,n-1\}$ be its local maxima.
 
@@ -411,20 +412,20 @@ Then $S_1$ consists of $(e_1,\ldots,e_{k_1,1})$.
 For $i\in\{2,\ldots,m\}$, $S_i$ consists of $(e_{k_{i-1},2},\ldots,e_{k_i,1})$.
 $S_{m+1}$ consists of $(e_{k_m,2},\ldots,e_n)$.
 
-For each sink $S_i$ we define
+For each sink $S$ we define
 \begin{align*}
-    \mathcal{B}_l(S_i) &=
+    \mathcal{B}_l(S) &=
         \begin{cases}
-            \textrm{the elevation of the first segment in $S_i$}, & \textrm{if there is a sink to the left of $S_i$} \\
+            \textrm{the elevation of the first segment in $S$}, & \textrm{if there is a sink to the left of $S$} \\
             \infty, & \textrm{otherwise} \\
         \end{cases} \\
-    \mathcal{B}_r(S_i) &=
+    \mathcal{B}_r(S) &=
         \begin{cases}
-            \textrm{the elevation of the last segment in $S_i$}, & \textrm{if there is a sink to the right of $S_i$} \\
+            \textrm{the elevation of the last segment in $S$}, & \textrm{if there is a sink to the right of $S$} \\
             \infty, & \textrm{otherwise} \\
         \end{cases}
 \end{align*}
-The \textit{bounding height} $\mathcal{B}(S_i)$ of $S_i$ is $\min(\mathcal{B}_l(S_i), \mathcal{B}_r(S_i))$.
+The \textit{bounding height} $\mathcal{B}(S)$ of $S$ is $\min(\mathcal{B}_l(S), \mathcal{B}_r(S))$.
 
 We write $\mathcal{E}(S_i)$ for the sequence of elevation levels in $S_i$.
 For example, $\mathcal{E}(S_i) = (e_{k_{i-1}^2},\ldots,e_{k_i^1})$ for $i\in\{2,\ldots,m\}$.
@@ -949,6 +950,12 @@ Therefore the outer loop runs in $\bO(n\log(n))$.
 
 In the second loop, applying the algorithm from lemma \ref{alg1} takes $\bO(\norm{\mathcal{E}(S)})$ time.
 Since $\sum_S\norm{\mathcal{E}(S)}\le 2n$, all applications combined run in $\bO(n)$ time.
+\end{proof}
+
+\begin{proof}[Proof of corollary \ref{mainresult}] 
+Given $(e_1,\ldots,e_n)$, compute the fully merged elevation sequence in $\bO(n)$ time.
+Apply the previous theorem to compute the elevation levels at time $T$ in $\bO(n\log(n))$ time.
+Retrieve the elevation levels at the points $\{0,\ldots,n-1\}$ by applying lemma \ref{retrieval} in $\bO(n\log(n))$ time.
 \end{proof}
 
 \end{document}
