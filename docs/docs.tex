@@ -25,6 +25,13 @@
 \newcommand{\bO}{\mathcal{O}}
 \newcommand{\Rp}{\mathbb{R}_+}
 \newcommand{\Rnn}{\mathbb{R}_{\ge0}}
+\newcommand{\Br}{\mathcal{B}_r}
+\newcommand{\Bl}{\mathcal{B}_l}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\Wc}{\mathcal{W}_c}
+\newcommand{\W}{\mathcal{W}}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\E}{\mathcal{E}}
 
 \DeclareMathOperator{\capp}{cap}
 \DeclareMathOperator{\ot}{ot}
@@ -64,15 +71,13 @@ The task is to find an algorithm that outputs the elevation of each segment afte
 \end{ex}
 
 Our main result is
-
 \begin{cor}
 \label{mainresult}
 There is an algorithm that computes the elevation levels in $\bO(n\log(n))$ time.
 \end{cor}
-
 We will prove this at the very end of this paper.
 
-In the following we will no longer assume that each $e_i$ describes a segment with a width of $1$ unit.
+In the following, we will no longer assume that each $e_i$ describes a segment with a width of $1$ unit.
 Instead, let $(w_1,\ldots,w_n) \in \Rp^n$ be a sequence describing the width of the segments.
 The original problem can then be solved by setting $w_i = 1$.
 
@@ -206,7 +211,6 @@ Next we will describe an algorithm that solves the problem for a terrain with a 
 We will call this algorithm the \textit{SLM algorithm}.
 
 \begin{lem}[SLM Algorithm]
-    \label{alg1}
     Let $n\in\Np$, $V\in\Rnn$, and let $(e_1,\ldots,e_n)$ be a fully merged elevation sequence with a single local minimum.
     The following algorithm calculates the elevation levels after pouring $V$ square units of water into the terrain.
     The algorithm runs in $\bO(n)$ time.
@@ -288,7 +292,7 @@ Furthermore, in line \ref{a1:imin0}, $i^{K+1} := i^K \le n^K - 1 = n^{K+1}$.
 
 This completes the proof by induction.
 
-\textbf{Part 2}: By induction over $K$ we show that the sequence $e_1^K,\ldots,e_{n^K}^K$ is fully merged and has a single local minimum, and that $e_{i^K}^K$ is the local minimum of the sequence.
+\textbf{Part 2}: By induction over $K$, we show that the sequence $e_1^K,\ldots,e_{n^K}^K$ is fully merged and has a single local minimum, and that $e_{i^K}^K$ is the local minimum of the sequence.
 
 For $K=0$ it is clear.
 Assume that the condition holds for $K = \tilde{K}$ and that we have started the loop with $K$ set to this value.
@@ -337,7 +341,7 @@ We have shown above that invoking the algorithm with $V$ is the same as running 
 Note that invoking the algorithm with $V_1$ runs the iteration once and then once more with $V = 0$.
 Since the sequence is fully merged, we know that $u > 0$; therefore we break out of the loop in the second iteration.
 However, the second iteration has no effect on the output of the algorithm.
-Therefore, invoking the algorithm with $V$ is indentical to invoking the algorithm once with $V = V_1$ and then with $V = V_2$ on the output of the first invocation.
+Therefore, invoking the algorithm with $V$ is identical to invoking the algorithm once with $V = V_1$ and then with $V = V_2$ on the output of the first invocation.
 During the first iteration of the invocation with $V = V_1$, we have $V = u \ge u$ in line \ref{a1:vleu}.
 Therefore the algorithm outputs a new sequence with length $n^1 < n$.
 
@@ -411,61 +415,67 @@ Otherwise, split each $e_{k_i}$ into $e_{k_i,1}$ and $e_{k_i,2}$, each having ha
 Then $S_1$ consists of $(e_1,\ldots,e_{k_1,1})$.
 For $i\in\{2,\ldots,m\}$, $S_i$ consists of $(e_{k_{i-1},2},\ldots,e_{k_i,1})$.
 $S_{m+1}$ consists of $(e_{k_m,2},\ldots,e_n)$.
+Consequently there are $m+1$ sinks.
 
 For each sink $S$ we define
 \begin{align*}
-    \mathcal{B}_l(S) &=
+    \Bl(S) &=
         \begin{cases}
             \textrm{the elevation of the first segment in $S$}, & \textrm{if there is a sink to the left of $S$} \\
             \infty, & \textrm{otherwise} \\
         \end{cases} \\
-    \mathcal{B}_r(S) &=
+    \Br(S) &=
         \begin{cases}
             \textrm{the elevation of the last segment in $S$}, & \textrm{if there is a sink to the right of $S$} \\
             \infty, & \textrm{otherwise} \\
         \end{cases}
 \end{align*}
-The \textit{bounding height} $\mathcal{B}(S)$ of $S$ is $\min(\mathcal{B}_l(S), \mathcal{B}_r(S))$.
+The \textit{bounding height} $\B(S)$ of $S$ is defined as $\B(S) = \min(\Bl(S), \Br(S))$.
 
-We write $\mathcal{E}(S_i)$ for the sequence of elevation levels in $S_i$.
-For example, $\mathcal{E}(S_i) = (e_{k_{i-1}^2},\ldots,e_{k_i^1})$ for $i\in\{2,\ldots,m\}$.
-We write $\mathcal{C}(S_i)$ for the subsequence of $\mathcal{E}(S_i)$ consisting of those $e$ for which $e \le \mathcal{B}(S_i)$.
-We write $\norm{\mathcal{E}(S_i)}$ for the number of elements in $\mathcal{E}(S_i)$ and $\norm{\mathcal{C}(S_i)}$ for the number of elements in $\mathcal{C}(S_i)$.
+We write $\E(S)$ for the sequence of segments in $S$.
+For example, $\E(S_i) = (e_{k_{i-1}^2},\ldots,e_{k_i^1})$ for $i\in\{2,\ldots,m\}$.
+We write $\C(S)$ for the subsequence of $\E(S)$ consisting of those $e$ for which $e \le \B(S)$.
+We write $\norm{\E(S)}$ for the number of elements in $\E(S)$ and $\norm{\C(S)}$ for the number of elements in $\C(S)$.
 
-It is clear that, since $\mathcal{E}(S_i)$ contains no local maximum, $\mathcal{C}(S_i)$ is a continuous subsequence of $\mathcal{E}(S_i)$.
-That is, if $e_a$, $e_b$, and $e_c$ are in $\mathcal{E}(S_i)$ in that order, and $e_a$ and $e_c$ are in $\mathcal{C}(S_i)$, then $e_b\in\mathcal{C}(S_i)$.
-Let $e_l$ and $e_r$ be the first and last elements in $\mathcal{E}(S_i)$.
-By the definition of $\mathcal{B}(S_i)$, $e_l\le\mathcal{B}(S_i)$ or $e_r\le\mathcal{B}(S_i)$.
-Therefore $e_l\in\mathcal{C}(S_i)$ or $e_r\in\mathcal{C}(S_i)$.
+It is clear that, since $\E(S)$ contains no local maximum, $\C(S)$ is a continuous subsequence of $\E(S)$.
+That is, if $e_a$, $e_b$, and $e_c$ are in $\E(S)$ in that order, and $e_a$ and $e_c$ are in $\C(S)$, then $e_b\in\C(S)$.
+Let $e_l$ and $e_r$ be the first and last elements in $\E(S)$.
+By the definition of $\B(S)$, $e_l\le\B(S)$ or $e_r\le\B(S)$.
+Therefore $e_l\in\C(S)$ or $e_r\in\C(S)$.
 
-For each segment $e\in\mathcal{E}(S_i)$, let $\mathcal{W}(e)$ be the corresponding width.
-We define the \textit{capacity} $\capp(S_i)$ of a sink as follows:
+When discussing the time complexity of our algorithm, we will assume that $\E(S)$ is implemented by storing two pointers.
+The first pointer points to the first element in $\E(S)$ and the second pointer points to the last element of $\E(S)$.
+Similarly for $\C(S)$.
+
+For each segment $e\in\E(S)$, let $\W(e)$ be the corresponding width.
+We define the \textit{capacity} $\capp(S)$ of a sink as follows:
 \begin{align*}
-    \capp(S_i) = \sum_{e\in\mathcal{C}(S_i)} \mathcal{W}(e)(\mathcal{B}(S_i)-e).
+    \capp(S) = \sum_{e\in\C(S)} \W(e)(\B(S)-e).
 \end{align*}
-Note that $\capp(S_i)$ is the volume of water $S_i$ can hold before it overflows.
+Note that $\capp(S)$ is the volume of water $S$ can hold before it overflows.
 
-We define the \textit{width} $\mathcal{W}(S_i)$ of $S_i$ by
+We define the \textit{width} $\W(S)$ of $S$ by
 \begin{align*}
-    \mathcal{W}(S_i) = \sum_{e\in\mathcal{E}(S_i)} \mathcal{W}(e).
+    \W(S) = \sum_{e\in\E(S)} \W(e).
 \end{align*}
-We define the \textit{capacity width} $\mathcal{W}_c(S_i)$ of $S_i$ by
+We define the \textit{capacity width} $\Wc(S)$ of $S$ by
 \begin{align*}
-    \mathcal{W}_c(S_i) = \sum_{e\in\mathcal{C}(S_i)} \mathcal{W}(e).
+    \Wc(S) = \sum_{e\in\C(S)} \W(e).
 \end{align*}
 
-At certain points in the algorithm, we compute for a sink $S_i$ how much water is currently in the sink.
+At certain points in the algorithm, we compute for a sink $S$ how much water is currently in the sink.
 At these points we store the time since it has started raining and the computed value.
-We call these values $\filltime(S_i)$ and $\Fill(S_i)$ respectively.
-Initially both values are $0$.
+We call these values $\filltime(S)$ and $\Fill(S)$ respectively.
+Initially, both values are $0$.
 
-For each sink $S_i$, we calculate the time (in hours) at which it will overflow, $\ot(S_i)$, as follows:
+For each sink $S$, we calculate the time (in hours) at which it will overflow, $\ot(S)$, as follows:
 \begin{align*}
-    \ot(S_i) = \frac{\capp(S_i) - \Fill(S_i)}{\mathcal{W}(S_i)} + \filltime(S_i).
+    \ot(S) = \frac{\capp(S) - \Fill(S)}{\W(S)} + \filltime(S).
 \end{align*}
-It is clear that if a sink has capacity $\capp(S_i)$ of which $\Fill(S_i)$ is already used, then the remaining capacity for additional water is $\capp(S_i) - \Fill(S_i)$.
-Since the sink receives $\mathcal{W}(S_i)$ square units of water per hour, this additional capacity is used up after $\frac{(\capp(S_i) - \Fill(S_i))}{\mathcal{W}(S_i)}$.
-Since this additional rain occurs after the time $\filltime(S_i)$, we have to add $\filltime(S_i)$ to get the absolute time value.
+If a sink has capacity $\capp(S)$, of which $\Fill(S)$ is already used, then the remaining capacity for additional water is $\capp(S) - \Fill(S)$.
+Since the sink receives $\W(S)$ square units of water per hour, this additional capacity is used up after $\frac{\capp(S) - \Fill(S)}{\W(S)}$ hours.
+Since this additional rain occurs after the time $\filltime(S)$, we have to add $\filltime(S)$ to get the absolute time value.
+We will prove this more formally below.
 
 We define a total order on the sinks $S_i$ by the lexicographic order on the tuples $(\ot(S_i), i)$.
 That is, sinks that overflow earlier come first.
@@ -476,10 +486,10 @@ Popping an element from this queue always returns the sink that comes first in t
 That is, it always returns the sink that overflows next.
 
 Some of the properties above require more than $\bO(1)$ time to be computed.
-In these cases, we will assume that the propertise are calculated once and then cached.
+In these cases, we will assume that the properties are calculated once and then cached.
 When merging two sinks we will re-calculate the cached values.
 
-In our algorithm, we we will maintain doubly-linked lists of elevation segments and sinks.
+In our algorithm, we will maintain doubly-linked lists of elevation segments and sinks.
 Both of these lists contain their elements from left to right in the terrain.
 When we say that we remove one or more elevation segments or sinks, we mean removing them from these linked lists.
 
@@ -498,89 +508,88 @@ When we say that we remove one or more elevation segments or sinks, we mean remo
         \If{$\ot(S)\ge T$} \label{a2:otget}
             \State break
         \EndIf
-        \State $c := \ot(S)$ \label{a2:cupd}
-        \If{$\mathcal{B}_l(S) = \mathcal{B}_r(S)$} \label{a2:bleqbr}
+        \If{$\Bl(S) = \Br(S)$} \label{a2:bleqbr}
             \State Let $S_l$ be the sink to the left of $S$ \label{a2:getsl}
             \State Let $S_r$ be the sink to the right of $S$ \label{a2:getsr}
-            \State $\Fill(S_l) := \Fill(S_l) + (c - \filltime(S_l))\mathcal{W}(S_l)$
-            \State $\Fill(S_r) := \Fill(S_r) + (c - \filltime(S_r))\mathcal{W}(S_r)$
-            \State $\filltime(S_l) := c$ \label{a2:setflsl}
-            \State $\filltime(S_r) := c$
+            \State $\Fill(S_l) := \Fill(S_l) + (\ot(S) - \filltime(S_l))\W(S_l)$
+            \State $\Fill(S_r) := \Fill(S_r) + (\ot(S) - \filltime(S_r))\W(S_r)$
+            \State $\filltime(S_l) := \ot(S)$ \label{a2:setflsl}
+            \State $\filltime(S_r) := \ot(S)$
             \State Let $e_r$ be the rightmost segment in $S_l$ \label{a2:geter}
             \State Let $e_l$ be the leftmost segment in $S_r$ \label{a2:getel}
             \State Remove all segments between $e_r$ and $e_l$ \label{a2:remerel}
-            \State $w := \mathcal{W}(e_r) + \mathcal{W}(e_l) +\mathcal{W}(S)$ \label{a2:defw}
-            \State $d_r := w/2 - \mathcal{W}(e_r)$ \label{a2:defdr}
-            \State $d_l := w/2 - \mathcal{W}(e_l)$ \label{a2:defdl}
-            \State $\mathcal{W}(e_r) := \mathcal{W}(e_r) + d_r$ \label{a2:adlener}
-            \State $\mathcal{W}(e_l) := \mathcal{W}(e_l) + d_l$ \label{a2:adlenel}
-            \State $\mathcal{W}(S_l) := \mathcal{W}(S_l) + d_r$ \label{a2:adlenls}
-            \State $\mathcal{W}(S_r) := \mathcal{W}(S_r) + d_l$ \label{a2:adlenrs}
-            \If{$\mathcal{C}(S_l)$ ends in $e_r$}
-              \State $\mathcal{W}_c(S_l) := \mathcal{W}_c(S_l) + d_r$ \label{a2:modwcsl}
+            \State $w := \W(e_r) + \W(e_l) +\W(S)$ \label{a2:defw}
+            \State $d_r := w/2 - \W(e_r)$ \label{a2:defdr}
+            \State $d_l := w/2 - \W(e_l)$ \label{a2:defdl}
+            \State $\W(e_r) := \W(e_r) + d_r$ \label{a2:adlener}
+            \State $\W(e_l) := \W(e_l) + d_l$ \label{a2:adlenel}
+            \State $\W(S_l) := \W(S_l) + d_r$ \label{a2:adlenls}
+            \State $\W(S_r) := \W(S_r) + d_l$ \label{a2:adlenrs}
+            \If{$\C(S_l)$ ends in $e_r$}
+              \State $\Wc(S_l) := \Wc(S_l) + d_r$ \label{a2:modwcsl}
             \EndIf
-            \If{$\mathcal{C}(S_r)$ ends in $e_l$}
-              \State $\mathcal{W}_c(S_r) := \mathcal{W}_c(S_r) + d_l$
+            \If{$\C(S_r)$ ends in $e_l$}
+              \State $\Wc(S_r) := \Wc(S_r) + d_l$
             \EndIf
             \State Remove $S$. \label{a2:rems}
             \State Recalculate $\ot(S_l)$ \label{a2:recalotsl}
             \State Recalculate $\ot(S_r)$ \label{a2:recalotsr}
         \Else
-            \If{$\mathcal{B}_l(S) < \mathcal{B}_r(S)$} \label{a2:bllessbr}
+            \If{$\Bl(S) < \Br(S)$} \label{a2:bllessbr}
               \State Let $S_m$ be the sink to the left of $S$ \label{a2:getsm}
             \Else
               \State Let $S_m$ be the sink to the right of $S$
             \EndIf
-            \State $\Fill(S_m) := \Fill(S_m) + (c - \filltime(S_m))\mathcal{W}(S_m)$
-            \State $\filltime(S_m) := c$ \label{a2:setflsm}
-            \State Remove the elements of $\mathcal{C}(S)$ \label{a2:remcs}
-            \State Extend $\mathcal{E}(S_m)$ to contain $\mathcal{E}(S)$ \label{a2:extend}
-            \State $\mathcal{W}(S_m) := \mathcal{W}(S_m) + \mathcal{W}(S)$ \label{a2:addwsm}
-            \If{$\mathcal{B}_l(S) < \mathcal{B}_r(S)$}
+            \State $\Fill(S_m) := \Fill(S_m) + (\ot(S) - \filltime(S_m))\W(S_m)$
+            \State $\filltime(S_m) := \ot(S)$ \label{a2:setflsm}
+            \State Remove the elements of $\C(S)$ \label{a2:remcs}
+            \State Extend $\E(S_m)$ to contain $\E(S)$ \label{a2:extend}
+            \State $\W(S_m) := \W(S_m) + \W(S)$ \label{a2:addwsm}
+            \If{$\Bl(S) < \Br(S)$}
               \State Let $e_r$ be the rightmost segment in $S_m$ \label{a2:geter2}
-              \State $\mathcal{W}(e_r) := \mathcal{W}(e_r) + \mathcal{W}_c(S)$ \label{a2:addwer}
-              \If{$\mathcal{C}(S_m)$ ends in $e_r$}
-                \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}_c(S)$
+              \State $\W(e_r) := \W(e_r) + \Wc(S)$ \label{a2:addwer}
+              \If{$\C(S_m)$ ends in $e_r$}
+                \State $\Wc(S_m) := \Wc(S_m) + \Wc(S)$
               \EndIf
-              \State $\mathcal{B}_r(S_m) := \mathcal{B}_r(S)$ \label{a2:bru}
+              \State $\Br(S_m) := \Br(S)$ \label{a2:bru}
             \Else
               \State Let $e_l$ be the leftmost segment in $S_m$
-              \State $\mathcal{W}(e_l) := \mathcal{W}(e_l) + \mathcal{W}_c(S)$
-              \If{$\mathcal{C}(S_m)$ ends in $e_l$}
-                \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}_c(S)$
+              \State $\W(e_l) := \W(e_l) + \Wc(S)$
+              \If{$\C(S_m)$ ends in $e_l$}
+                \State $\Wc(S_m) := \Wc(S_m) + \Wc(S)$
               \EndIf
-              \State $\mathcal{B}_l(S_m) := \mathcal{B}_l(S)$ \label{a2:blu}
+              \State $\Bl(S_m) := \Bl(S)$ \label{a2:blu}
             \EndIf
-            \State $b := \mathcal{B}(S_m)$
-            \State $\mathcal{B}(S_m) := \min(\mathcal{B}_l(S_m), \mathcal{B}_r(S_m))$ \label{a2:bu}
-            \State $\capp(S_m) := \capp(S_m) + \mathcal{W}_c(S_m)(\mathcal{B}(S_m) - b)$ \label{a2:inccap}
-            \While{true} \label{a2:walkstart}
-              \State Let $e$ be the first segment to the left of $\mathcal{C}(S_m)$
-              \If{$e > \mathcal{B}(S_m)$ or $e$ is outside of $\mathcal{E}(S_m)$}
+            \State $b := \B(S_m)$
+            \State $\B(S_m) := \min(\Bl(S_m), \Br(S_m))$ \label{a2:bu}
+            \State $\capp(S_m) := \capp(S_m) + \Wc(S_m)(\B(S_m) - b)$ \label{a2:inccap}
+            \While{there is a segment to the left of $\C(S_m)$} \label{a2:walkstart}
+              \State Let $e$ be the segment immediately to the left of $\C(S_m)$
+              \If{$e > \B(S_m)$ or $e$ is outside of $\E(S_m)$}
                   \State break
               \EndIf
-              \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}(e)$
-              \State $\capp(S_m) := \capp(S_m) + \mathcal{W}(e)(\mathcal{B}(S_m) - e)$
-              \State Extend $\mathcal{C}(S_m)$ to contain $e$ \label{a2:cext1} \label{a2:dec1}
+              \State $\Wc(S_m) := \Wc(S_m) + \W(e)$
+              \State $\capp(S_m) := \capp(S_m) + \W(e)(\B(S_m) - e)$
+              \State Extend $\C(S_m)$ to contain $e$ \label{a2:cext1} \label{a2:dec1}
             \EndWhile
-            \While{true}
-              \State Let $e$ be the first segment to the right of $\mathcal{C}(S_m)$
-              \If{$e > \mathcal{B}(S_m)$ or $e$ is outside of $\mathcal{E}(S_m)$}
+            \While{there is a segment to the right of $\C(S_m)$}
+              \State Let $e$ be the segment immediately to the right of $\C(S_m)$
+              \If{$e > \B(S_m)$ or $e$ is outside of $\E(S_m)$}
                   \State break
               \EndIf
-              \State $\mathcal{W}_c(S_m) := \mathcal{W}_c(S_m) + \mathcal{W}(e)$
-              \State $\capp(S_m) := \capp(S_m) + \mathcal{W}(e)(\mathcal{B}(S_m) - e)$
-              \State Extend $\mathcal{C}(S_m)$ to contain $e$ \label{a2:cext2} \label{a2:dec2}
+              \State $\Wc(S_m) := \Wc(S_m) + \W(e)$
+              \State $\capp(S_m) := \capp(S_m) + \W(e)(\B(S_m) - e)$
+              \State Extend $\C(S_m)$ to contain $e$ \label{a2:cext2} \label{a2:dec2}
             \EndWhile  \label{a2:walkstop}
             \State Remove $S$. \label{a2:rems2}
             \State Recalculate $\ot(S_m)$ \label{a2:recalotsm}
         \EndIf
     \EndWhile
     \For{each sink $S$ in the linked list}
-      \State $\Fill(S) := \Fill(S) + (T - \filltime(S))\mathcal{W}(S)$ \label{a2:lastfill}
-      \State Detach $\mathcal{E}(S)$ from the rest of the linked list
-      \State Apply the algorithm from Lemma \ref{alg1} to $\mathcal{E}(S)$ with $V = \Fill(S)$
-      \State Insert the output into the linked list in the place where we just detached $\mathcal{E}(S)$
+      \State $\Fill(S) := \Fill(S) + (T - \filltime(S))\W(S)$ \label{a2:lastfill}
+      \State Detach $\E(S)$ from the rest of the linked list
+      \State Apply the SLM algorithm to $\E(S)$ with $V = \Fill(S)$
+      \State Insert the output into the linked list in the place where we just detached $\E(S)$
     \EndFor
     \State The linked list of segments are the desired elevation levels.
 \end{algorithmic}
@@ -589,29 +598,29 @@ When we say that we remove one or more elevation segments or sinks, we mean remo
 \textbf{Part 1}:
 We show by induction that the following properties hold for all sinks $S$ in the linked list of sinks whenever we reach line \ref{a2:firstline}.
 \begin{enumerate}[label=\textbf{\Roman*}]
-\item The definitions of $\mathcal{B}_l(S)$, $\mathcal{B}_r(S)$, $\mathcal{B}(S)$, $\mathcal{C}(S)$, $\capp(S)$, $\mathcal{W}(S)$, $\mathcal{W}_c(S)$, and $\ot(S)$ hold.\label{e1}
-\item The $\mathcal{E}(S)$ form a partition of the terrain.\label{e2}
-\item $\filltime(S) \le T$, $\filltime(S) \le \ot(S)$\label{e3}
+\item The definitions of $\Bl(S)$, $\Br(S)$, $\B(S)$, $\C(S)$, $\capp(S)$, $\W(S)$, $\Wc(S)$, and $\ot(S)$ hold.\label{e1}
+\item The $\E(S)$ form a partition of the terrain.\label{e2}
+\item $\filltime(S) \le T$ and $\filltime(S) \le \ot(S_*)$ for all $S_*$ in the linked list.\label{e3}
 \item If two sinks in the linked list are next to each other, then the segments at their common boundary have the same elevation and width.\label{e4} 
 \item If the linked list contains more than one sink, then each sink contains at least two segments.\label{e6}
-\item The $\mathcal{C}(S)$ are non-empty.\label{e7}
-\item $\mathcal{W}(S)$, $\mathcal{W}_c(S)$ are positive and never decrease.\label{e8}
-\item $\mathcal{W}(e)$ is positive for all segments.\label{e9}
-\item $\mathcal{B}_l(S)$ and $\mathcal{B}_r(S)$ are positive and never decrease.\label{e10}
+\item The $\C(S)$ are non-empty.\label{e7}
+\item $\W(S)$, $\Wc(S)$ are positive and never decrease.\label{e8}
+\item $\W(e)$ is positive for all segments.\label{e9}
+\item $\Bl(S)$ and $\Br(S)$ are positive and never decrease.\label{e10}
 \item $\capp(S)$ is positive and never decreases.\label{e11}
-\item $\mathcal{E}(S)$, when detached from the rest of the linked list of segments, has a single local minimum.\label{e12}
+\item $\E(S)$, when detached from the rest of the linked list of segments, has a single local minimum and is fully merged.\label{e12}
 \item The priority queue $B$ contains exactly the sinks in the linked list of sinks and is not empty.\label{e13}
 \item The sequence of values $\ot(S)$ of the sinks $S$ popped in line \ref{a2:firstline} never decreases.\label{e15}
 \item $\Fill(S) \le \capp(S)$.\label{e16}
-\item $\sum_S\left(\norm{\mathcal{E}(S)} - \norm{\mathcal{C}(S)}\right)$ (where $S$ ranges over all $S$ in the linked list) does not increase during this iteration and decreases by $1$ for each time to algorithm reaches line \ref{a2:dec1} or \ref{a2:dec2}.\label{e17}
-\item Applying the algorithm from lemma \ref{alg1} to $\mathcal{E}(S)$ detached from all other sinks with $V=\Fill(S)$ computes the elevation levels of the sink at time $\filltime(S)$.\label{e18}
+\item $\sum_S\left(\norm{\E(S)} - \norm{\C(S)}\right)$ (where $S$ ranges over all $S$ in the linked list) does not increase during this iteration and decreases by $1$ for each time to algorithm reaches line \ref{a2:dec1} or \ref{a2:dec2}.\label{e17}
+\item Applying the SLM algorithm to $\E(S)$ detached from all other sinks with $V=\Fill(S)$ computes the elevation levels of the sink at time $\filltime(S)$.\label{e18}
 \end{enumerate}
 
 Throughout the proof, we will use the prime symbol $'$ to refer to the values of properties as they were at the start of the iteration before any modifications.
-For example, $\mathcal{W}(S')$.
+For example, $\W(S')$.
 
 Note: During the proof we make gratuitous use of the following physical property:
-Due to \ref{e4}, water that falls onto a sink always flows towards the sink and never outside the sink.
+Due to \ref{e4} and \ref{e12}, water that falls onto a sink always flows towards the sink and never outside the sink.
 
 \textbf{Induction start}: Assume that we have reached line \ref{a2:firstline} for the first time.
 Then none of the $S$ or their properties have been modified after construction.
@@ -620,14 +629,14 @@ Therefore \ref{e1} holds by definition.
 Since $\filltime(S) = 0$, $\filltime(S) \le T$.
 Since
 \begin{align*}
-    \ot(S) = \frac{\capp(S) - \Fill(S)}{\mathcal{W}(S)} + \filltime(S)
-           = \frac{\capp(S)}{\mathcal{W}(S)}
+    \ot(S_*) = \frac{\capp(S_*) - \Fill(S_*)}{\W(S_*)} + \filltime(S_*)
+           = \frac{\capp(S_*)}{\W(S_*)}
            \ge 0 = \filltime(S),
 \end{align*}
 \ref{e3} holds.
 
 \ref{e2} and \ref{e4} hold by the construction of the sinks. 
-\ref{e7} holds because $\mathcal{C}(S)$ contains one of the end-segments of the sink.
+\ref{e7} holds because $\C(S)$ contains one of the end-segments of the sink.
 \ref{e9} holds by our definition of elevation sequence.
 
 To show \ref{e6}, note that if there is only 1 sink, there is nothing to do.
@@ -637,29 +646,30 @@ Therefore, if $e_l$ and $e_r$ are segments next to each other and $e_r$ is a loc
 the sink to the left of $e_r$ contains $e_l$ and the left half of the split version of $e_r$.
 Therefore \ref{e6} holds.
 
-$\mathcal{W}(S) > 0$ holds because each sink contains at least one segment and because of \ref{e9}.
-$\mathcal{W}_c(S) > 0$ holds because of \ref{e7} and \ref{e9}.
+$\W(S) > 0$ holds because each sink contains at least one segment and because of \ref{e9}.
+$\Wc(S) > 0$ holds because of \ref{e7} and \ref{e9}.
 Therefore \ref{e8} holds.
 
-To show \ref{e10}, note that if $S$ is the leftmost sink, $\mathcal{B}_l(S)$ is $\infty$.
+To show \ref{e10}, note that if $S$ is the leftmost sink, $\Bl(S)$ is $\infty$.
 Otherwise it is the elevation level of the leftmost segment in $S$.
-Since this segment was created by splitting a local maximum of the original elevation segment, and since local maxima are positive by definition, $\mathcal{B}_l(S)$ is positive.
-Similarly for $\mathcal{B}_r(S)$.
+Since this segment was created by splitting a local maximum of the original elevation segment, and since local maxima are positive by definition, $\Bl(S)$ is positive.
+Similarly for $\Br(S)$.
 Therefore \ref{e10} holds.
 
-To show \ref{e11}, recall that $\capp(S) = \sum_{e\in\mathcal{C}(S)} \mathcal{W}(e)(\mathcal{B}(S)-e)$.
-Since $\mathcal{C}(S)$ is not empty by \ref{e7} and $\mathcal{W}(e) > 0$ by \ref{e9}, we only have
-to show that $\mathcal{B}(S) > e$ for some $e\in\mathcal{C}(S)$.
-If $\mathcal{B}(S)=\infty$, there is nothing to show.
-Otherwise, if $\mathcal{B}(S) = \min(\mathcal{B}_l(S), \mathcal{B}_r(S)) = \mathcal{B}_l(S)$, the leftmost segment $e_l$ in $S$ was created by splitting a local maximum of the original elevation sequence.
-$\mathcal{B}_l(S)$ is the elevation of this segment.
-The segment to the right of $e_l$, $e_*$, was not a local maximum of the original sequence and $e_* < e_l = \mathcal{B}(S)$.
-Therefore $e_*$ is part of $\mathcal{C}(S)$.
-Similarly for $\mathcal{B}(S) = \mathcal{B}_r(S)$.
+To show \ref{e11}, recall that $\capp(S) = \sum_{e\in\C(S)} \W(e)(\B(S)-e)$.
+Since $\C(S)$ is not empty by \ref{e7} and $\W(e) > 0$ by \ref{e9}, we only have
+to show that $\B(S) > e$ for some $e\in\C(S)$.
+If $\B(S)=\infty$, there is nothing to show.
+Otherwise, if $\B(S) = \min(\Bl(S), \Br(S)) = \Bl(S)$, the leftmost segment $e_l$ in $S$ was created by splitting a local maximum of the original elevation sequence.
+$\Bl(S)$ is the elevation of this segment.
+The segment to the right of $e_l$, $e_*$, was not a local maximum of the original sequence and $e_* < e_l = \B(S)$.
+Therefore $e_*$ is part of $\C(S)$.
+Similarly for $\B(S) = \Br(S)$.
 Therefore \ref{e11} holds.
 
-To show \ref{e12}, note that $\mathcal{E}(S)$ does not contain a local maximum by the contstruction of the sinks.
-By lemma \ref{localmin}, this is equivalent to $\mathcal{E}(S)$ having a single local minimum.
+To show \ref{e12}, note that $\E(S)$ does not contain a local maximum by the construction of the sinks.
+By lemma \ref{localmin}, this is equivalent to $\E(S)$ having a single local minimum.
+Since the original sequence was fully merged and since $\E(S)$ contains split segments only at its boundary, $\E(S)$ is fully merged.
 Therefore \ref{e12} holds.
 
 By our construction of $B$ it contains all sinks and by our construction of the sinks, there is at least 1 sink.
@@ -678,56 +688,56 @@ Note that, because of $\ref{e13}$, popping a sink from $B$ is a well-defined ope
 If $\ot(S)\ge T$ in line \ref{a2:otget}, then we leave the loop and there is nothing to show.
 Assume $\ot(S) < T$.
 
-\textbf{Case 1}: $\mathcal{B}_l(S) = \mathcal{B}_r(S)$ in line \ref{a2:bleqbr}.
+\textbf{Case 1}: $\Bl(S) = \Br(S)$ in line \ref{a2:bleqbr}.
 
 Since 
 \begin{align*}
-    \ot(S) &= \frac{\capp(S) - \Fill(S)}{\mathcal{W}(S)} + \filltime(S) \\
-           &= \frac{\sum_{e\in\mathcal{C}(S)} \mathcal{W}(e)(\mathcal{B}(S)-e) - \Fill(S)}{\mathcal{W}(S)} + \filltime(S) \\
+    \ot(S) &= \frac{\capp(S) - \Fill(S)}{\W(S)} + \filltime(S) \\
+           &= \frac{\sum_{e\in\C(S)} \W(e)(\B(S)-e) - \Fill(S)}{\W(S)} + \filltime(S) \\
            &< T \\
            &< \infty,
 \end{align*}
-by \ref{e1}, $\mathcal{C}(S)$ is not empty by \ref{e7}, and $\mathcal{W}(e) > 0$ by \ref{e9},
-we see that $\mathcal{B}_l(S) = \mathcal{B}_r(S) = \min(\mathcal{B}_l(S), \mathcal{B}_r(S)) = \mathcal{B}(S) < \infty$.
+by \ref{e1}, $\C(S)$ is not empty by \ref{e7}, and $\W(e) > 0$ by \ref{e9},
+we see that $\Bl(S) = \Br(S) = \min(\Bl(S), \Br(S)) = \B(S) < \infty$.
 
-Therefore, by \ref{e1}, $S$ has neighbors to its left and right.
-Therefore, the operations in lines \ref{a2:getsl} and \ref{a2:getsr} are well-defined.
+Therefore, by \ref{e1}, $S$ has neighbors to its left and right and the operations in lines \ref{a2:getsl} and \ref{a2:getsr} are well-defined.
 
 Let $e_r$ and $e_l$ be as in lines \ref{a2:geter} and \ref{a2:getel}.
-By \ref{e4} and \ref{e6}, we know that $\mathcal{W}(S) \ge \mathcal{W}(e_l) + \mathcal{W}(e_r)$.
-Therefore $w/2 \ge \mathcal{W}(e_l), \mathcal{W}(e_r)$ holds for $w$ as in line \ref{a2:defw}.
+By \ref{e4} and \ref{e6}, we know that $\W(S) \ge \W(e_l) + \W(e_r)$.
+Therefore $w/2 \ge \W(e_l), \W(e_r)$ holds for $w$ as in line \ref{a2:defw}.
 Therefore $d_r, d_l \ge 0$ in lines \ref{a2:defdr}, \ref{a2:defdl}.
 
-Note that $d_r + d_l = \mathcal{W}(S)$.
+Note that $d_r + d_l = \W(S)$.
 In line \ref{a2:remerel} we remove the segments between $e_r$ and $e_l$ but in lines \ref{a2:adlener} and \ref{a2:adlenel} we distribute the removed width to $e_r$ and $e_l$.
 Therefore the total width of the linked list of segments remains the same.
-Similarly, in line \ref{a2:rems} we remove $S$ from the linked list of sinks but in lines \ref{a2:adlenls} and \ref{a2:adlenrs} we distribute the removed width to $S_l$ and $S_r$.
+Similarly, in line \ref{a2:rems}, we remove $S$ from the linked list of sinks but in lines \ref{a2:adlenls} and \ref{a2:adlenrs} we distribute the removed width to $S_l$ and $S_r$.
 Therefore the total width of the linked list of sinks remains the same.
 Therefore \ref{e2} holds.
-Since we add $d_r$ to both $\mathcal{W}(e_r)$ and $\mathcal{W}(S_l)$, the definition of $\mathcal{W}(S_l)$ continues to hold.
-Similarly for $\mathcal{W}(S_r)$.
+Since we add $d_r$ to both $\W(e_r)$ and $\W(S_l)$, the definition of $\W(S_l)$ continues to hold.
+Similarly for $\W(S_r)$.
 
 Note that after lines \ref{a2:adlener} and \ref{a2:adlenel}, $e_r$ and $e_l$ have the same length.
-Because of \ref{e4}, $e_r = \mathcal{B}_l(S) = \mathcal{B}_r(S) = e_l$.
+Because of \ref{e4}, $e_r = \Bl(S) = \Br(S) = e_l$.
 Therefore \ref{e4} holds after line \ref{a2:rems}.
 
 Only the right boundary of $S_l$ and the left boundary of $S_r$ are affected by these modifications.
-Since $S_l$ and $S_r$ are neighbors after line \ref{a2:rems} and since the elevations of $e_r$ and $e_l$ are unchanged, $\mathcal{B}_l(S_l)$, $\mathcal{B}_r(S_l)$, and $\mathcal{B}(S_l)$ remain accurate.
+Since $S_l$ and $S_r$ are neighbors after line \ref{a2:rems} and since the elevations of $e_r$ and $e_l$ are unchanged, $\Bl(S_l)$, $\Br(S_l)$, and $\B(S_l)$ remain accurate.
+Similarly for $S_r$.
 Therefore \ref{e10} holds.
-Similarly for $S_r$.
 
-Note that $\mathcal{E}(S_l)$ is unchanged by our operations and that $\mathcal{C}(S_l)$, being defined only in terms of $\mathcal{E}(S_l)$ and $\mathcal{B}(S_l)$, remains accurate.
-If $\mathcal{C}(S_l)$ contains $e_r$, then $\mathcal{W}_c(S_l)$ becomes accurate after line \ref{a2:modwcsl}.
-Therefore \ref{e7} holds.
+Note that $\E(S_l)$ is unchanged by our operations and that $\C(S_l)$, being defined only in terms of $\E(S_l)$ and $\B(S_l)$, remains accurate.
+If $\C(S_l)$ contains $e_r$, then $\Wc(S_l)$ becomes accurate after line \ref{a2:modwcsl}.
 Similarly for $S_r$.
+Therefore \ref{e7} holds.
 
 Since $d_r, d_l \ge 0$, \ref{e8} and \ref{e9} hold.
 
-If $\mathcal{C}(S_l)$ does not contain $e_r$, then it is clear that $\capp(S_l)$ is unaffected by the change in $\mathcal{W}(e_r)$.
-Otherwise, note that $\mathcal{B}(S_l) \le \mathcal{B}_r(S_l) = e_r \le \mathcal{B}(S_l)$.
-Therefore $\mathcal{B}(S_l) = e_r$ and $\capp(S_l)$ is unaffected by the change in $\mathcal{W}(e_r)$.
-Therefore the definition of $\capp(S_l)$ continues to hold and \ref{e11} holds.
+If $\C(S_l)$ does not contain $e_r$, then it is clear that $\capp(S_l)$ is unaffected by the change in $\W(e_r)$.
+Otherwise, note that $\B(S_l) \le \Br(S_l) = e_r \le \B(S_l)$.
+Therefore $\B(S_l) = e_r$ and $\capp(S_l)$ is unaffected by the change in $\W(e_r)$.
+Therefore the definition of $\capp(S_l)$ continues to hold.
 Similarly for $S_r$.
+Hence and \ref{e11} holds.
 
 Since we recalculate $\ot(S_l)$ and $\ot(S_r)$ in lines \ref{a2:recalotsl} and \ref{a2:recalotsr}, they are accurate after the iteration.
 
@@ -736,68 +746,69 @@ We have thus shown that \ref{e1} holds.
 Since $S$ was popped from $B$ and because of \ref{e13}, $S$ comes before $S_m$ in the total order of the sinks, that is $\ot(S)\le\ot(S_l')$.
 Therefore
 \begin{align*}
-    \Fill(S_l) &= \Fill(S_l') + (c-\filltime(S_l'))\mathcal{W}(S_l') \\
-               &\le \Fill(S_l') + (\ot(S_l')-\filltime(S_l'))\mathcal{W}(S_l') \\
-               &= \Fill(S_l') + \left(\frac{\capp(S_l') - \Fill(S_l')}{\mathcal{W}(S_l')}\right)\mathcal{W}(S_l') \\
+    \Fill(S_l) &= \Fill(S_l') + (\ot(S)-\filltime(S_l'))\W(S_l') \\
+               &\le \Fill(S_l') + (\ot(S_l')-\filltime(S_l'))\W(S_l') \\
+               &= \Fill(S_l') + \left(\frac{\capp(S_l') - \Fill(S_l')}{\W(S_l')}\right)\W(S_l') \\
                &= \capp(S_l') \\
                &= \capp(S_l)
 \end{align*}
-Therefore \ref{e16} holds.
 Similarly for $S_r$.
+Therefore \ref{e16} holds.
 
-We set $\filltime(S_l) = c = \ot(S) < T$ in line \ref{a2:setflsl}.
+We set $\filltime(S_l) = \ot(S) < T$ in line \ref{a2:setflsl}.
 Note that
 \begin{align*}
-    \ot(S_l) &= \frac{\capp(S_l) - \Fill(S_l)}{\mathcal{W}(S_l)} + \filltime(S_l) \\
+    \ot(S_l) &= \frac{\capp(S_l) - \Fill(S_l)}{\W(S_l)} + \filltime(S_l) \\
              &\ge \filltime(S_l) \\
              &= \ot(S).
 \end{align*}
-Therefore \ref{e3} and \ref{e15} holds.
+and $\ot(S)$ is the minimum of all $\ot(S_*)$.
 Similarly for $S_r$.
+Therefore \ref{e3} and \ref{e15} hold.
 
 Since we do not change the number of segments in $S_l$ and $S_r$, \ref{e6} holds.
 Since we have not changed the elevations of any of the segments in $S_l$ and $S_r$, \ref{e12} holds.
 
 Since we have removed exactly $S$ from $B$ and since we have removed exactly $S$ from the linked list in line \ref{a2:rems}, \ref{e13} holds.
 
-Since we removed $S$ from the linked list and did not modify the number of elements in $\mathcal{E}(S_*)$ or $\mathcal{C}(S_*)$ for any other $S_*$, \ref{e17} holds.
+Since we removed $S$ from the linked list and did not modify the number of elements in $\E(S_*)$ or $\C(S_*)$ for any other $S_*$, \ref{e17} holds.
 
 For each $S_*$ in the list, between $\filltime(S_*')$ and $\ot(S)$, 
 \begin{align*}
-    (\ot(S) - \filltime(S_*'))\mathcal{W}(S_*')
-        &= (\ot(S) - \ot(S_*'))\mathcal{W}(S_*') + (\ot(S_*') - \filltime(S_*'))\mathcal{W}(S_*') \\
-        &= (\ot(S) - \ot(S_*'))\mathcal{W}(S_*') + \capp(S_*') - \Fill(S_*')
+    (\ot(S) - \filltime(S_*'))\W(S_*')
+        &= (\ot(S) - \ot(S_*'))\W(S_*') + (\ot(S_*') - \filltime(S_*'))\W(S_*') \\
+        &= (\ot(S) - \ot(S_*'))\W(S_*') + \capp(S_*') - \Fill(S_*')
 \end{align*}
 square units of water fall directly on top of $S_*$.
 Recall that
 \begin{align*}
-    \capp(S_*') = \sum_{e\in\mathcal{C}(S_*')} \mathcal{W}(e)(\mathcal{B}(S_*')-e).
+    \capp(S_*') = \sum_{e\in\C(S_*')} \W(e)(\B(S_*')-e).
 \end{align*}
 is the amount of water that $S_*$ can hold before it overflows.
 Since $\Fill(S_*')\le\capp(S_*')$, $S_*$ does not overflow by filling it with $\Fill(S_*')$ square units of water.
-By \ref{e18}, applying the algorithm from lemma \ref{alg1} to $S_*$ with $V=\Fill(S_*')$ yields the elevation levels at time $\filltime(S_*')$.
-By lemma \ref{compose}, applying the algorithm with $V=\Fill(S_*')$ and then with $V=(\ot(S) - \filltime(S_*'))\mathcal{W}(S_*')$ is the same as applying it once with $V=(\ot(S) - \ot(S_*'))\mathcal{W}(S_*') + \capp(S_*')$.
+By \ref{e18}, applying the SLM algorithm to $S_*$ with $V=\Fill(S_*')$ yields the elevation levels at time $\filltime(S_*')$.
+By lemma \ref{compose}, applying the algorithm with $V=\Fill(S_*')$ and then with $V=(\ot(S) - \filltime(S_*'))\W(S_*')$ is the same as applying it once with $V=(\ot(S) - \ot(S_*'))\W(S_*') + \capp(S_*')$.
 Since the first summand is non-positive, we see that no $S_*$ overflows between $\filltime(S_*')$ and $\ot(S)$.
 
 Note that as long as no sink overflows, there is a bijection between the volume of water in a sink and the time at which this volume has fallen into the sink.
 
 For $S_* = S$, we see that at time $\ot(S)$ it is filled with $\capp(S)$ square units of water.
-Therefore the elevation levels of all $e\in\mathcal{C}(S)$ become $\mathcal{B}(S)$.
+Therefore the elevation levels of all $e\in\C(S)$ become $\B(S)$.
 
 We now show that \ref{e18} continues to hold for $S_l$ and $S_r$.
 By the discussion above, we know that the amount of water in $S_l'$ at time $\filltime(S) = \ot(S)$ is
 \begin{align*}
-    &(\ot(S) - \ot(S_l'))\mathcal{W}(S_l') + \capp(S_l') \\
-  = &\left(\ot(S) - \frac{\capp(S_l') - \Fill(S_l')}{\mathcal{W}(S_l')} - \filltime(S_l)\right)\mathcal{W}(S_l') + \capp(S_l') \\
-  = &\left(\ot(S) - \filltime(S_l)\right)\mathcal{W}(S_l') + \Fill(S_l') \\
-  = &\Fill(S).
+    &(\ot(S) - \ot(S_l'))\W(S_l') + \capp(S_l') \\
+  = &\left(\ot(S) - \frac{\capp(S_l') - \Fill(S_l')}{\W(S_l')} - \filltime(S_l)\right)\W(S_l') + \capp(S_l') \\
+  = &\left(\ot(S) - \filltime(S_l)\right)\W(S_l') + \Fill(S_l') \\
+  = &\Fill(S_l).
 \end{align*}
-And therefore $\Fill(S)\le\capp(S_l')$.
-Therefore applying the algorithm from lemma \ref{alg1} to the original $S_l'$ with volume $\Fill(S)$ yields the elevation levels at time $\filltime(S_l)$.
+And therefore $\Fill(S_l)\le\capp(S_l')$.
+Therefore applying the SLM algorithm to the original $S_l'$ with volume $\Fill(S_l)$ yields the elevation levels at time $\filltime(S_l)$.
 
-Recall that $e_r\le\mathcal{B}_r(S_l')$.
-Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is the algorithm from lemma \ref{alg1} returns the segment $e_r$ unchanged.
-Therefore extending the segment $e_r$ has no effect on the output of the algorithm.
+Recall that $e_r\ge\B(S_l')$.
+Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is, the SLM algorithm returns the segment $e_r$ unchanged.
+Therefore, extending the segment $e_r$ has no effect on the output of the algorithm.
 
 Therefore applying the algorithm to $S_l$ returns the correct levels in the area previously covered by $S_l'$.
 Recall that in the area to the right of $S_l$ that was previously covered by $S$, the elevation levels have risen to be exactly $e_r$.
@@ -806,91 +817,91 @@ Therefore the algorithm returns the correct levels everywhere.
 A similar discussion applies to $S_r$.
 Therefore \ref{e18} holds.
 
-\textbf{Case 2}: $\mathcal{B}_l(S) < \mathcal{B}_r(S)$ in line \ref{a2:bllessbr}.
+\textbf{Case 2}: $\Bl(S) < \Br(S)$ in line \ref{a2:bllessbr}.
 
-Since $\mathcal{B}_l(S) < \infty$, there is a sink to the left of $S$ and the operation in
+Since $\Bl(S) < \infty$, there is a sink to the left of $S$ and the operation in
 in line \ref{a2:getsm} is well-defined.
 
 Let $e_r$ be as in line \ref{a2:geter2}.
 
-In line \ref{a2:remcs} we remove the elements of $\mathcal{C}(S)$ from the linked list of segments but in line \ref{a2:addwer} we add the removed width to $e_r$.
+In line \ref{a2:remcs} we remove the elements of $\C(S)$ from the linked list of segments but in line \ref{a2:addwer} we add the removed width to $e_r$.
 Therefore, the total width of the linked list of segments remains the same.
 Similarly, in line \ref{a2:rems2}, we remove $S$ from the linked list of sinks but in line \ref{a2:addwsm} we add the removed width to $S_m$.
 Therefore, the total width of the linked list of sinks remains the same.
-In line \ref{a2:extend} we extend $\mathcal{E}(S_m)$ to contain the remaining elements of $\mathcal{E}(S)$.
+In line \ref{a2:extend} we extend $\E(S_m)$ to contain the remaining elements of $\E(S)$.
 Therefore all elements in the linked list of segments are contained in a sink.
 Therefore \ref{e2} holds.
 
-Since $\mathcal{W}_c(S) > 0$ in line \ref{a2:addwer}, \ref{e9} holds.
-Since we only modify $\mathcal{W}(S_m)$ and $\mathcal{W}_c(S_m)$ by adding positive numbers to them, \ref{e8} holds.
+Since $\Wc(S) > 0$ in line \ref{a2:addwer}, \ref{e9} holds.
+Since we only modify $\W(S_m)$ and $\Wc(S_m)$ by adding positive numbers to them, \ref{e8} holds.
 Similarly, we only add non-negative numbers to $\capp(S_m)$.
 Therefore \ref{e11} holds.
 
-Note that the segments that we add to $\mathcal{E}(S_m)$ in line \ref{a2:extend} have a length of $\mathcal{W}(S) - \mathcal{W}_c(S)$.
-However, since we extended $e_r$ by $\mathcal{W}_c(S)$ in line \ref{a2:addwer}, the total growth in of the total width of the segments in $\mathcal{E}(S_m)$ is $\mathcal{W}(S)$ as in line \ref{a2:addwsm}.
-Therefore the definition of $\mathcal{W}(S_m)$ continues to hold.
+Note that the segments that we add to $\E(S_m)$ in line \ref{a2:extend} have a length of $\W(S) - \Wc(S)$.
+However, since we extended $e_r$ by $\Wc(S)$ in line \ref{a2:addwer}, the total growth of the width of the segments in $\E(S_m)$ is $\W(S)$ as in line \ref{a2:addwsm}.
+Therefore the definition of $\W(S_m)$ continues to hold.
 
 If there is no sink to the right of $S$, it is clear that \ref{e4} continues to hold.
-Otherwise, note that, since $\mathcal{B}_l(S) < \mathcal{B}_r(S)$, the last element of $\mathcal{E}(S)$ is not in $\mathcal{C}(S)$.
-Therefore, this element was added to $\mathcal{E}(S_m)$ in line \ref{a2:extend}.
+Otherwise, note that, since $\Bl(S) < \Br(S)$, the last element of $\E(S)$ is not in $\C(S)$.
+Therefore, this element was added to $\E(S_m)$ in line \ref{a2:extend}.
 Therefore \ref{e4} continues to hold.
 
 Only the right boundary of $S_m$ is affected by these changes.
-In line \ref{a2:bru} we update $\mathcal{B}_r(S_m)$ to have the correct value.
-In line \ref{a2:bu} we update $\mathcal{B}(S_m)$ to have the correct value.
-Since $\mathcal{B}_r(S_m') = \mathcal{B}_l(S) < \mathcal{B}_r(S) = \mathcal{B}_r(S_m)$, \ref{e10} holds.
+In line \ref{a2:bru} we update $\Br(S_m)$ to have the correct value.
+In line \ref{a2:bu} we update $\B(S_m)$ to have the correct value.
+Since $\Br(S_m') = \Bl(S) < \Br(S) = \Br(S_m)$, \ref{e10} holds.
 
-Since we only add elements to $\mathcal{C}(S_m)$ in lines \ref{a2:cext1} and \ref{a2:cext2}, \ref{e7} holds.
+Since we only add elements to $\C(S_m)$ in lines \ref{a2:cext1} and \ref{a2:cext2}, \ref{e7} holds.
 
-Since we do not remove any segments from $\mathcal{E}(S_m)$, \ref{e6} holds.
+Since we do not remove any segments from $\E(S_m)$, \ref{e6} holds.
 
 We compute as in the previous case $\Fill(S_m) \le \capp(S_m') \le \capp(S_m)$.
 Therefore \ref{e16} holds.
-We set $\filltime(S_m) = c = \ot(S) < T$ in line \ref{a2:setflsm}.
+We set $\filltime(S_m) = \ot(S) < T$ in line \ref{a2:setflsm}.
 We compute as in the previous case $\ot(S_m)\ge\filltime(S_m)=\ot(S)$.
 Therefore \ref{e3} and \ref{e15} hold.
 
 Since we have removed exactly $S$ from $B$ and since we have removed exactly $S$ from the linked list in line \ref{a2:rems2}, \ref{e13} holds.
 
-Note that $e > \mathcal{B}_l(S)$ for all $e\in\mathcal{E}(S)\setminus\mathcal{C}(S)$.
-In line \ref{a2:extend} we extend $\mathcal{E}(S_m)$ only by those elements in $\mathcal{E}(S)\setminus\mathcal{C}(S)$.
-Let $e_m$ be the local minimum in $\mathcal{E}(S_m')$.
-Then $e_m\le e_l=\mathcal{B}_l(S)<e$ for any $e\in\mathcal{E}(S)\setminus\mathcal{C}(S)$.
-Furthermore, note that the local minimum of $S$ was contained within $\mathcal{C}(S)$.
-Since $\mathcal{C}(S)$ was a continuous subset of $\mathcal{E}(S)$ that contained the leftmost segment in $S$, all elements in $\mathcal{E}(S)\setminus\mathcal{C}(S)$ are monotonictally increasing.
-Therefore $e_m$ remains the local minimum of $\mathcal{E}(S_m)$.
+Note that $e > \Bl(S)$ for all $e\in\E(S)\setminus\C(S)$.
+In line \ref{a2:extend} we extend $\E(S_m)$ only by those elements in $\E(S)\setminus\C(S)$.
+Let $e_m$ be the local minimum in $\E(S_m')$.
+Then $e_m\le e_r=\Bl(S)<e$ for any $e\in\E(S)\setminus\C(S)$.
+Furthermore, note that the local minimum of $S$ was contained within $\C(S)$.
+Since $\C(S)$ was a continuous subset of $\E(S)$ that contained the leftmost segment in $S$, all elements in $\E(S)\setminus\C(S)$ are monotonically increasing.
+Therefore $e_m$ remains the single local minimum of $\E(S_m)$ and $\E(S_m)$ is fully merged.
 Therefore $\ref{e12}$ holds.
 
-Note that when we reach line \ref{a2:bu}, we have moved the elements of $\mathcal{E}(S)\setminus\mathcal{C}(S)$ to $\mathcal{E}(S_m)$.
-Since we have removed $S$ from the linked list, the value of $\sum_S\left(\norm{\mathcal{E}(S)} - \norm{\mathcal{C}(S)}\right)$ remains the same.
-Whenever we reach lines \ref{a2:dec1} or \ref{a2:dec2}, we extend $\mathcal{C}(S_m)$ by one segment.
-Therefore $\norm{\mathcal{E}(S_m)} - \norm{\mathcal{C}(S_m)}$ decreases by one.
+Note that when we reach line \ref{a2:bu}, we have moved the elements of $\E(S)\setminus\C(S)$ to $\E(S_m)$.
+Since we have removed $S$ from the linked list, the value of $\sum_S\left(\norm{\E(S)} - \norm{\C(S)}\right)$ remains the same.
+Whenever we reach lines \ref{a2:dec1} or \ref{a2:dec2}, we extend $\C(S_m)$ by one segment.
+Therefore $\norm{\E(S_m)} - \norm{\C(S_m)}$ decreases by one.
 Therefore \ref{e17} holds.
 
-Let $\mathcal{C_*}(S_m)$, $\capp_*(S_m)$, and $\mathcal{W}_{c*}(S_m)$ be the correctly calculated values of these properties based on the other properties that have been calculated up to this point.
-We will now show that the rest of the code transforms $\mathcal{C}(S_m')$, $\capp(S_m')$, and $\mathcal{W}_c(S_m')$ to match these values.
+Let $\C_*(S_m)$, $\capp_*(S_m)$, and $\W_{c*}(S_m)$ be the correctly calculated values of these properties based on the other properties that have been calculated up to this point.
+We will now show that the rest of the code transforms $\C(S_m')$, $\capp(S_m')$, and $\Wc(S_m')$ to match these values.
 
 Note that
 \begin{align*}
-    \capp(S_m') &= \sum_{e\in\mathcal{C}(S_m')} \mathcal{W}(e')(\mathcal{B}(S_m')-e) \\
-                &= \sum_{e\in\mathcal{C}(S_m')} \mathcal{W}(e)(\mathcal{B}(S_m')-e)
+    \capp(S_m') &= \sum_{e\in\C(S_m')} \W(e')(\B(S_m')-e) \\
+                &= \sum_{e\in\C(S_m')} \W(e)(\B(S_m')-e)
 \end{align*}
-since $\mathcal{W}(e)$ only changed for $e_r$ for which $e_r\ge\mathcal{B}(S_m')$.
+since $\W(e)$ only changed for $e_r$ for which $e_r\ge\B(S_m')$.
 Therefore
 \begin{align*}
-    \capp_*(S_m) - \capp(S_m') &= \sum_{e\in\mathcal{C_*}(S_m)} \mathcal{W}(e)(\mathcal{B}(S_m)-e) - \sum_{e\in\mathcal{C}(S_m')} \mathcal{W}(e)(\mathcal{B}(S_m')-e) \\
-               &= \sum_{e\in C_1\cup C_2}\mathcal{W}(e)(\mathcal{B}(S_m)-e) + \sum_{e\in\mathcal{C}(S_m')} \mathcal{W}(e)(\mathcal{B}(S_m)-\mathcal{B}(S_m')) \\
-               &= \sum_{e\in C_1\cup C_2}\mathcal{W}(e)(\mathcal{B}(S_m)-e) + \mathcal{W}_c(S_m)(\mathcal{B}(S_m) - \mathcal{B}(S_m'))
+    \capp_*(S_m) - \capp(S_m') &= \sum_{e\in\C_*(S_m)} \W(e)(\B(S_m)-e) - \sum_{e\in\C(S_m')} \W(e)(\B(S_m')-e) \\
+               &= \sum_{e\in C_1\cup C_2}\W(e)(\B(S_m)-e) + \sum_{e\in\C(S_m')} \W(e)(\B(S_m)-\B(S_m')) \\
+               &= \sum_{e\in C_1\cup C_2}\W(e)(\B(S_m)-e) + \Wc(S_m)(\B(S_m) - \B(S_m'))
 \end{align*}
-where $C_1$ are the elements from $\mathcal{C_*}(S_m)$ to the left of $\mathcal{C}(S_m')$ and $C_2$ are the elements from $\mathcal{C_*}(S_m)$ to the right of $\mathcal{C}(S_m')$.
+where $C_1$ are the elements from $\C_*(S_m)$ to the left of $\C(S_m')$ and $C_2$ are the elements from $\C_*(S_m)$ to the right of $\C(S_m')$.
 
-Note that at this point we have already updated $\mathcal{W}_c(S_m)$ to account for the increased width of $e_r$.
+Note that at this point we have already updated $\Wc(S_m)$ to account for the increased width of $e_r$ if $e_r\in\C(S_m')$.
 
-Since we have already shown that $S_m$ has a single local minimum, we know that $C_1$ and $C_2$ are continuous sequences starting immediately to the left and right of $\mathcal{C}(S_m')$.
-Therefore we can walk $\mathcal{E}(S_m)\setminus\mathcal{C}(S_m')$ starting immediately to the left (right) of $\mathcal{C}(S_m')$ until we find a segment $e$ for which $\mathcal{B}(S_m)\ge e$ no longer holds.
+Since we have already shown that $S_m$ has a single local minimum, we know that $C_1$ and $C_2$ are continuous sequences starting immediately to the left and right of $\C(S_m')$.
+Therefore we can walk $\E(S_m)\setminus\C(S_m')$ starting immediately to the left (right) of $\C(S_m')$ until we find a segment $e$ for which $\B(S_m)\ge e$ no longer holds.
 
 In line \ref{a2:inccap} we add the second summand from the equation above to $\capp(S_m)$.
-In lines \ref{a2:walkstart} to \ref{a2:walkstop} we perform the walks described above and update $\mathcal{C}(S_m)$, $\capp(S_m)$, and $\mathcal{W}_c(S_m)$ to the correct values.
+In lines \ref{a2:walkstart} to \ref{a2:walkstop} we perform the walks described above and update $\C(S_m)$, $\capp(S_m)$, and $\Wc(S_m)$ to the correct values.
 
 In line \ref{a2:recalotsm} we set $\ot(S_m)$ to the correct value.
 
@@ -898,22 +909,22 @@ Therefore \ref{e1} holds.
 
 We now show that \ref{e18} continues to hold for $S_m$.
 Recall from the previous case that the amount of water in $S_m'$ at time $\filltime(S) = \ot(S)$ is $\Fill(S)$ and that $\Fill(S)\le\capp(S_m')$.
-Therefore applying the algorithm from lemma \ref{alg1} to the original $S_m'$ with volume $\Fill(S)$ yields the elevation levels at time $\filltime(S_m)$.
+Therefore applying the SLM algorithm to the original $S_m'$ with volume $\Fill(S)$ yields the elevation levels at time $\filltime(S_m)$.
 
-Recall that $e_r\le\mathcal{B}_r(S_m')$.
-Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is the algorithm from lemma \ref{alg1} returns the segment $e_r$ unchanged.
+Recall that $e_r\ge\B(S_m')$.
+Therefore none of the water poured into $S_l$ stays on top of the segment $e_r$, that is the SLM algorithm returns the segment $e_r$ unchanged.
 Therefore extending the segment $e_r$ has no effect on the output of the algorithm.
 
 Therefore applying the algorithm to $S_m$ returns the correct levels in the area previously covered by $S_m'$.
-Recall by the discussion from the previous case that in the area to the right of $S_m$ that was previously covered by $\mathcal{C}(S)$, the elevation levels have risen to be exactly $e_r$.
-Therefore the algorithm returns the correct levels in the area previously covered by $\mathcal{C}(S)$.
+Recall by the discussion from the previous case that in the area to the right of $S_m$ that was previously covered by $\C(S)$, the elevation levels have risen to be exactly $e_r$.
+Therefore the algorithm returns the correct levels in the area previously covered by $\C(S)$.
 
-Note that the elevation level in $\mathcal{E}(S)\setminus\mathcal{C}(S)$ were left unchanged by the rain falling on $S$ and that these levels are all above $e_r$.
+Note that the elevation level in $\E(S)\setminus\C(S)$ were left unchanged by the rain falling on $S$ and that these levels are all above $e_r$.
 Therefore, since $S_l$ contains these segments unchanged, the algorithm returns the correct levels everywhere.
 
 Therefore \ref{e18} holds.
 
-\textbf{Case 3}: $\mathcal{B}_l(S) > \mathcal{B}_r(S)$ in line \ref{a2:bllessbr}.
+\textbf{Case 3}: $\Bl(S) > \Br(S)$ in line \ref{a2:bllessbr}.
 
 This is identical to the previous case.
 
@@ -924,14 +935,14 @@ This completes the proof by induction.
 Note that after the first loop ends, \ref{e18} continues to hold.
 As in case 1 above, we see that the amount of water in $S$ at time $T$ is
 \begin{align*}
-    &(T - \ot(S))\mathcal{W}(S) + \capp(S) \\
-  = &\left(T - \frac{\capp(S) - \Fill(S)}{\mathcal{W}(S)} - \filltime(S)\right)\mathcal{W}(S) + \capp(S) \\
-  = &\left(T - \filltime(S)\right)\mathcal{W}(S) + \Fill(S).
+    &(T - \ot(S))\W(S) + \capp(S) \\
+  = &\left(T - \frac{\capp(S) - \Fill(S)}{\W(S)} - \filltime(S)\right)\W(S) + \capp(S) \\
+  = &\left(T - \filltime(S)\right)\W(S) + \Fill(S).
 \end{align*}
 Note that this is the value that we assign to $\Fill(S)$ in line \ref{a2:lastfill}.
 In particular, $\Fill(S)\le\capp(S)$.
-By the discussion in case 1 above, applying the algorithm from lemma \ref{alg1} to $S$ with $V=\Fill(S)$ yields the elevation levels at time $T$ for the part of the terrain that is covered by $\mathcal{E}(S)$.
-By \ref{e2}, $\mathcal{E}(S)$ are a partition of the terrain.
+By the discussion in case 1 above, applying the SLM algorithm to $S$ with $V=\Fill(S)$ yields the elevation levels at time $T$ for the part of the terrain that is covered by $\E(S)$.
+By \ref{e2}, $\E(S)$ are a partition of the terrain.
 Therefore the algorithm calculates the levels for the entire terrain.
 
 \textbf{Part 3}: We show that the algorithm runs in $\bO(n\log(n))$.
@@ -943,13 +954,13 @@ Hence, $B$ also contains at most $2n$ elements.
 Constructing $B$ can be performed in $\bO(n\log(n))$.
 
 Since we remove one element from $B$ per iteration of the outer loop and since we never add any elements to $B$, the outer loop runs at most $2n$ times.
-Furthermore, since $\sum_S\left(\norm{\mathcal{E}(S)} - \norm{\mathcal{C}(S)}\right) \le 2n$, by \ref{e17}, the inner loops between lines \ref{a2:walkstart} to \ref{a2:walkstop} iterate at most a total of $2n$ times over the entire runtime of the algorithm.
+Furthermore, since $\sum_S\left(\norm{\E(S)} - \norm{\C(S)}\right) \le 2n$, by \ref{e17}, the inner loops between lines \ref{a2:walkstart} to \ref{a2:walkstop} iterate at most a total of $2n$ times over the entire runtime of the algorithm.
 Therefore we visit each line in the algorithm at most $2n$ times.
 Every operation within the outer loop is $\bO(1)$ except that popping an element from $B$ is $\bO(\log(n))$.
 Therefore the outer loop runs in $\bO(n\log(n))$.
 
-In the second loop, applying the algorithm from lemma \ref{alg1} takes $\bO(\norm{\mathcal{E}(S)})$ time.
-Since $\sum_S\norm{\mathcal{E}(S)}\le 2n$, all applications combined run in $\bO(n)$ time.
+In the second loop, applying the SLM algorithm takes $\bO(\norm{\E(S)})$ time.
+Since $\sum_S\norm{\E(S)}\le 2n$, all applications combined run in $\bO(n)$ time.
 \end{proof}
 
 \begin{proof}[Proof of corollary \ref{mainresult}] 
