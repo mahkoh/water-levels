@@ -382,8 +382,7 @@ impl Terrain {
                     }
                     mid = next;
                 } else {
-                    sgm![prev].width_times_2 +=
-                        sgm![mid].width_times_2 + sgm![next].width_times_2;
+                    sgm![prev].width_times_2 += sgm![mid].width_times_2 + sgm![next].width_times_2;
                     sgm![prev].next = sgm![next].next;
                     mid = prev;
                 }

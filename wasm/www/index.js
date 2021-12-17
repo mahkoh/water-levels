@@ -1,6 +1,8 @@
 import * as wasm from "water-levels-wasm";
 import * as d3 from "d3";
 
+document.querySelector("#commit").innerText = wasm.commit();
+
 let level_el = document.querySelector("#level");
 level_el.addEventListener("input", calculate);
 

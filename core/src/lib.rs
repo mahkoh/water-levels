@@ -1,3 +1,4 @@
+use anyhow::Result;
 use std::collections::BinaryHeap;
 use std::ops::Range;
 
@@ -6,6 +7,10 @@ mod sink;
 mod terrain;
 #[cfg(test)]
 mod tests;
+
+pub fn elevation_levels(levels: &[f64], hours: f64) -> Result<Vec<f64>> {
+    Terrain::new(levels)?.fill(hours)
+}
 
 #[derive(Debug, Clone)]
 struct Segment {
