@@ -16,6 +16,10 @@ jobs:
       run: |
         curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
         echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    - name: Run tests
+      run: |
+        cd core
+        cargo test
     - name: Install wasm-pack
       run: |
         cargo install wasm-pack
