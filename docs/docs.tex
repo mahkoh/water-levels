@@ -595,6 +595,11 @@ When we say that we remove one or more elevation segments or sinks, we mean remo
 \end{algorithmic}
 
 \begin{proof}
+The proof consists of three parts.
+In the first part we will show that the algorithm is well-formed and various useful properties.
+In the second part we will show that the algorithm computes the correct values.
+In the third part we will show that it runs in $\bO(n\log(n))$ time.
+
 \textbf{Part 1}:
 We show by induction that the following properties hold for all sinks $S$ in the linked list of sinks whenever we reach line \ref{a2:firstline}.
 \begin{enumerate}[label=\textbf{\Roman*}]
